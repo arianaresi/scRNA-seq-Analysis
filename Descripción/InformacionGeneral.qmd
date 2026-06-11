@@ -1,0 +1,63 @@
+---
+title: "Información General"
+author: "Victoria Lelis, Renata Sandoval y Ariana Silva"
+format: html
+editor: visual
+---
+
+## *Créditos: el presente código utilizado fue una modificación del código original realizado por la Dra. Evelia Lorena Coss Navarrete*
+
+# **Información general**
+
+Los datos para este proyecto fueron obtenidas del artículo `Modeling GATA2 deficiency in mice: the R396Q mutation disrupts normal hematopoiesis`, de los autores Hall T, Mehmood R, Sá da Bandeira D, Cotton A et al., publicado en 2025.
+
+## **Antecedentes**
+
+El factor de transcripción *GATA2* desempeña un papel esencial en la regulación de la hematopoyesis, particularmente en el mantenimiento y diferenciación de células madre y progenitoras hematopoyéticas. Mutaciones en este gen se han asociado con diversos trastornos hematológicos, incluyendo síndromes de inmunodeficiencia, mielodisplasia y predisposición a leucemia. Entre estas variantes, mutaciones puntuales como R396Q han sido implicadas en alteraciones funcionales que afectan la regulación transcripcional de genes clave en el linaje hematopoyético.
+
+En este contexto, el estudio de poblaciones celulares específicas, como las células LSK (Lin⁻ Sca-1⁺ c-Kit⁺), resulta fundamental para comprender cómo estas mutaciones impactan procesos tempranos de diferenciación. El uso de tecnologías como la secuenciación de RNA de célula única (scRNA-seq) ha permitido analizar con la heterogeneidad celular y los cambios en perfiles de expresión génica asociados a variantes genéticas. Así, el análisis comparativo entre condiciones silvestres y mutantes ofrece una ventana de oportunidad para identificar a los mecanismos moleculares que están detrás de fenotipos patológicos.
+
+## **Diseño experimental**
+
+El estudio empleó células LSK (Lin⁻ Sca-1⁺ c-Kit⁺) aisladas de modelos murinos en dos condiciones: silvestre (WT) y portadores de la mutación R396Q en *GATA2*. Las muestras se secuenciaron mediante la técnica de ARN de célula única (scRNA-seq), datos que se encuentran disponibles en el repositorio Gene Expression Omnibus bajo el ID de acceso GSE275213. Posteriormente, los datos fueron procesados mediante pipelines bioinformáticos que incluyeron control de calidad, normalización, reducción de dimensionalidad, clustering celular y análisis de expresión diferencial.
+
+Este enfoque permitió comparar directamente los estados celulares y perfiles transcriptómicos entre condiciones, evaluando el impacto funcional de la mutación en el sistema hematopoyético a resolución de célula única.
+
+## **Descripción de datos**
+
+Para obtener la información de las muestras, visitamos el sitio web de Gene Expression Omnibus, donde encontramos un DataSet con título `Modeling GATA2 deficiency in mice: the R396Q mutation disrupts normal hematopoiesis`. La información de GEO de este proyecto está disponible en: <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE275213>.
+
+En la siguiente tabla se encuentra resumida la información del bioproyecto:
+
+| Criterio                      | Información               |
+|-------------------------------|---------------------------|
+| Bioproject                    | PRJNA1149819              |
+| Especie                       | *Mus musculus*            |
+| Tejido                        | Médula ósea               |
+| Tipo celular                  | Células LSK               |
+| Plataforma                    | 10x Chromium              |
+| Tipo de captura               | 3'; células               |
+| Número de transcriptomas      | Ocho                      |
+| Número de réplicas biológicas | Siete                     |
+| Secuenciador                  | Illumina NovaSeq 6000     |
+| Distribución de muestras      | 4 mutantes y 3 silvestres |
+
+Además, en las siguientes dos tablas se describen las métricas de células recuperadas por muestra, lecturas y genes por célula. En la primera tabla, se condensan las muestras mutantes, y en la segunda tabla se exponen las muestras controles.
+
+| Muestras mutantes | Células recuperadas | Lecturas por célula | Genes por célula |
+|:-----------------|-----------------:|-----------------:|-----------------:|
+| mutant_1          |               2,960 |            15,435.1 |          4,389.4 |
+| mutant_2          |               3,019 |            15,294.8 |          4,435.4 |
+| mutant_3¹         |               2,100 |            15,568.1 |          4,325.5 |
+| mutant_3²         |               1,702 |            14,770.8 |          3,894.9 |
+
+| Muestras controles | Células recuperadas | Lecturas por célula | Genes por célula |
+|:-----------------|-----------------:|-----------------:|-----------------:|
+| wt_1               |               5,690 |            12,387.5 |          3,739.0 |
+| wt_2               |               7,270 |            10,996.1 |          3,467.3 |
+| wt_3               |               7,009 |            12,133.6 |          3,755.6 |
+| wt_4               |               5,533 |            11,589.1 |          3,671.3 |
+
+## **Resumen**
+
+En este proyecto se compararon células LSK de ratón de dos grupos: wild type (WT, sin mutaciones) y portadoras de la mutación R396Q en *Gata2*, la cual ha sido asociada en estudios previos con la progresión de la deficiencia de *Gata2* hacia leucemia. Los datos analizados son de tipo single-cell RNA-seq (scRNA-seq), generados mediante la plataforma Chromium 10x Genomics (v3.1) y secuenciados con Illumina NovaSeq en modalidad paired-end, a una profundidad mínima de 50,000 lecturas por célula. Para el análisis bioinformático se utilizaron Seurat y Harmony del pipeline original, para el filtrado, normalización, clustering, UMAP, expresión diferencial e integración de réplicas, respectivamente. Adicionalmente, se incorporaron SingleR con celldex para la anotación de tipos celulares, DoubletFinder para detección de dobletes y edgeR para expresión diferencial con enfoque pseudobulk. Se confirmaron genes previamente reportados como sobreexpresados en células mutantes, validando la reproducibilidad del pipeline. Además, se identificaron genes adicionales como *Mertk*, regulado a la baja en mutantes y vinculado a la señalización y homeostasis en progenitores hematopoyéticos, los cuales complementan lo ya descrito sobre el efecto de la mutación R396Q en *Gata2* y aportan nuevas perspectivas sobre los procesos metabólicos implicados en la transición hacia un estado leucémico.
