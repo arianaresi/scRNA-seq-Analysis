@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Renata Sandoval, Victoria Lelis y Ariana Silva">
+
+<title>Descarga y Normalizacion</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="NormalizacionDatos_files/libs/clipboard/clipboard.min.js"></script>
+<script src="NormalizacionDatos_files/libs/quarto-html/quarto.js"></script>
+<script src="NormalizacionDatos_files/libs/quarto-html/popper.min.js"></script>
+<script src="NormalizacionDatos_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="NormalizacionDatos_files/libs/quarto-html/anchor.min.js"></script>
+<link href="NormalizacionDatos_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="NormalizacionDatos_files/libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="NormalizacionDatos_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="NormalizacionDatos_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="NormalizacionDatos_files/libs/bootstrap/bootstrap-c0367b04c37547644fece4185067e4a7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Descarga y Normalizacion</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Renata Sandoval, Victoria Lelis y Ariana Silva </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="análisis-de-datos" class="level1">
+<h1><strong>Análisis de datos</strong></h1>
+<section id="cargar-paquetes-y-datasets-en-r" class="level2">
+<h2 class="anchored" data-anchor-id="cargar-paquetes-y-datasets-en-r">Cargar paquetes y datasets en R</h2>
+<section id="cargar-paquetes" class="level3">
+<h3 class="anchored" data-anchor-id="cargar-paquetes">Cargar paquetes</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Matrix) <span class="co"># install.packages("Matrix")</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(hdf5r)  <span class="co"># install.packages("hdf5r")</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rhdf5)  <span class="co"># BiocManager::install("rhdf5")</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DoubletFinder) <span class="co"># remotes::install_github('chris-mcginnis-ucsf/DoubletFinder', force = TRUE)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Seurat) <span class="do">## paquete principal de este capítulo</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="descargar-los-datasets-desde-geo" class="level3">
+<h3 class="anchored" data-anchor-id="descargar-los-datasets-desde-geo">Descargar los datasets desde GEO</h3>
+<p>Archivos que se descargan del estudio <strong>GSE275213</strong>:</p>
+<ol type="1">
+<li><p><code>GSE275213_series_matrix.txt.gz</code></p>
+<ul>
+<li>Contiene la <strong>matriz de expresión génica resumida</strong>.</li>
+<li>Es un archivo tabular donde cada fila corresponde a un gen y cada columna a una muestra.</li>
+<li>Útil para análisis rápidos sin necesidad de reconstruir todo el objeto de secuenciación.</li>
+</ul></li>
+<li><p><code>..._barcodes.tsv.gz</code></p>
+<ul>
+<li>Lista de <strong>códigos de barras celulares</strong>.</li>
+<li>Cada código identifica una célula individual en el experimento de scRNA-seq.</li>
+<li>Permite distinguir las lecturas de cada célula.</li>
+</ul></li>
+<li><p><code>..._features.tsv.gz</code></p>
+<ul>
+<li>Contiene la lista de <strong>genes (features)</strong> analizados.</li>
+<li>Incluye identificadores como el nombre del gen y, a veces, anotaciones adicionales.</li>
+<li>Se usa para mapear las filas de la matriz de conteos.</li>
+</ul></li>
+<li><p><code>..._matrix.mtx.gz</code></p>
+<ul>
+<li>Es la <strong>matriz de conteos cruda</strong> en formato <em>Matrix Market</em>.</li>
+<li>Representa cuántas veces se detectó cada gen en cada célula.</li>
+<li>Este archivo, junto con <em>barcodes</em> y <em>features</em>, forma el conjunto completo para reconstruir el objeto de análisis en herramientas como <strong>Seurat</strong>.</li>
+</ul></li>
+</ol>
+<p><strong>Nota importante:</strong> cada muestra tenía archivos independientes. Es decir, la muestra GSM8472849 cuenta con su respectivo archivo GSM8472849…_barcodes.tsv.gz, GSM8472849…_features.tsv.gz y GSM8472849…_matrix.mtx.gz. Fueron descargados cada uno de los archivos de cada muestra.</p>
+<section id="datos-wt" class="level4">
+<h4 class="anchored" data-anchor-id="datos-wt"><strong>Datos WT</strong></h4>
+<p>Solo se muestra un ejemplo de la descarga de datos para cada grupo (WT y R396Q).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Nombre de la carpeta</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dest_dir <span class="ot">&lt;-</span> <span class="st">"GSM8472849"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Si la carpeta existe, eliminarla primero</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">dir.exists</span>(dest_dir)) {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlink</span>(dest_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Carpeta eliminada: "</span>, dest_dir)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear la carpeta nuevamente</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Carpeta creada: "</span>, dest_dir)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Definir carpeta destino</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(dest_dir)) <span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Aumentar el tiempo de espera a 10 minutos (600 segundos)</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">600</span>)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de URLs a descargar</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>urls <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472849/suppl/GSM8472849%5F2660235%5FTH%5FGata2%5FWT%5F1%5Fbarcodes%2Etsv%2Egz"</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472849/suppl/GSM8472849%5F2660235%5FTH%5FGata2%5FWT%5F1%5Ffeatures%2Etsv%2Egz"</span>,</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472849/suppl/GSM8472849%5F2660235%5FTH%5FGata2%5FWT%5F1%5Fmatrix%2Emtx%2Egz"</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Descargar cada archivo</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (url <span class="cf">in</span> urls) {</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  dest_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(dest_dir, <span class="fu">basename</span>(url))</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(dest_file)) {</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Descargando: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(url, <span class="at">destfile =</span> dest_file, <span class="at">mode =</span> <span class="st">"wb"</span>)</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Ya existe: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="do">##Renombrabdo los archivos ya que mas adelante el comando "" solo espera encontrar en la carpeta barcodes.tsv.gz, features.tsv.gz etc.</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472849/GSM8472849%5F2660235%5FTH%5FGata2%5FWT%5F1%5Fbarcodes%2Etsv%2Egz"</span>, <span class="st">"GSM8472849/barcodes.tsv.gz"</span>)</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472849/GSM8472849%5F2660235%5FTH%5FGata2%5FWT%5F1%5Ffeatures%2Etsv%2Egz"</span>, <span class="st">"GSM8472849/features.tsv.gz"</span>)</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472849/GSM8472849%5F2660235%5FTH%5FGata2%5FWT%5F1%5Fmatrix%2Emtx%2Egz"</span>, <span class="st">"GSM8472849/matrix.mtx.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Nombre de la carpeta</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>dest_dir <span class="ot">&lt;-</span> <span class="st">"GSM8472850"</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Si la carpeta existe, eliminarla primero</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">dir.exists</span>(dest_dir)) {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlink</span>(dest_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Carpeta eliminada: "</span>, dest_dir)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta eliminada: GSM8472850</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear la carpeta nuevamente</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Carpeta creada: "</span>, dest_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta creada: GSM8472850</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definir carpeta destino</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(dest_dir)) <span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Aumentar el tiempo de espera a 10 minutos (600 segundos)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">600</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de URLs a descargar</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>urls <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472850/suppl/GSM8472850%5F2660236%5FTH%5FGata2%5FWT%5F2%5Fbarcodes%2Etsv%2Egz"</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472850/suppl/GSM8472850%5F2660236%5FTH%5FGata2%5FWT%5F2%5Ffeatures%2Etsv%2Egz"</span>,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472850/suppl/GSM8472850%5F2660236%5FTH%5FGata2%5FWT%5F2%5Fmatrix%2Emtx%2Egz"</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Descargar cada archivo</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (url <span class="cf">in</span> urls) {</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  dest_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(dest_dir, <span class="fu">basename</span>(url))</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(dest_file)) {</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Descargando: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(url, <span class="at">destfile =</span> dest_file, <span class="at">mode =</span> <span class="st">"wb"</span>)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Ya existe: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472850%5F2660236%5FTH%5FGata2%5FWT%5F2%5Fbarcodes%2Etsv%2Egz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472850%5F2660236%5FTH%5FGata2%5FWT%5F2%5Ffeatures%2Etsv%2Egz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472850%5F2660236%5FTH%5FGata2%5FWT%5F2%5Fmatrix%2Emtx%2Egz</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">##Renombrabdo los archivos ya que mas adelante el comando "" solo espera encontrar en la carpeta barcodes.tsv.gz, features.tsv.gz etc.</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472850/GSM8472850%5F2660236%5FTH%5FGata2%5FWT%5F2%5Fbarcodes%2Etsv%2Egz"</span>, <span class="st">"GSM8472850/barcodes.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472850/GSM8472850%5F2660236%5FTH%5FGata2%5FWT%5F2%5Ffeatures%2Etsv%2Egz"</span>, <span class="st">"GSM8472850/features.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472850/GSM8472850%5F2660236%5FTH%5FGata2%5FWT%5F2%5Fmatrix%2Emtx%2Egz"</span>, <span class="st">"GSM8472850/matrix.mtx.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Nombre de la carpeta</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>dest_dir <span class="ot">&lt;-</span> <span class="st">"GSM8472851"</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Si la carpeta existe, eliminarla primero</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">dir.exists</span>(dest_dir)) {</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlink</span>(dest_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Carpeta eliminada: "</span>, dest_dir)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta eliminada: GSM8472851</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear la carpeta nuevamente</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Carpeta creada: "</span>, dest_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta creada: GSM8472851</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definir carpeta destino</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(dest_dir)) <span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Aumentar el tiempo de espera a 10 minutos (600 segundos)</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">600</span>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de URLs a descargar</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>urls <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472851/suppl/GSM8472851%5F2660237%5FTH%5FGata2%5FWT%5F3%5Fbarcodes%2Etsv%2Egz"</span>,</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472851/suppl/GSM8472851%5F2660237%5FTH%5FGata2%5FWT%5F3%5Ffeatures%2Etsv%2Egz"</span>,</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472851/suppl/GSM8472851%5F2660237%5FTH%5FGata2%5FWT%5F3%5Fmatrix%2Emtx%2Egz"</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Descargar cada archivo</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (url <span class="cf">in</span> urls) {</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  dest_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(dest_dir, <span class="fu">basename</span>(url))</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(dest_file)) {</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Descargando: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(url, <span class="at">destfile =</span> dest_file, <span class="at">mode =</span> <span class="st">"wb"</span>)</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Ya existe: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472851%5F2660237%5FTH%5FGata2%5FWT%5F3%5Fbarcodes%2Etsv%2Egz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472851%5F2660237%5FTH%5FGata2%5FWT%5F3%5Ffeatures%2Etsv%2Egz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472851%5F2660237%5FTH%5FGata2%5FWT%5F3%5Fmatrix%2Emtx%2Egz</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="do">##Renombrabdo los archivos ya que mas adelante el comando "" solo espera encontrar en la carpeta barcodes.tsv.gz, features.tsv.gz etc.</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472851/GSM8472851%5F2660237%5FTH%5FGata2%5FWT%5F3%5Fbarcodes%2Etsv%2Egz"</span>, <span class="st">"GSM8472851/barcodes.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472851/GSM8472851%5F2660237%5FTH%5FGata2%5FWT%5F3%5Ffeatures%2Etsv%2Egz"</span>, <span class="st">"GSM8472851/features.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472851/GSM8472851%5F2660237%5FTH%5FGata2%5FWT%5F3%5Fmatrix%2Emtx%2Egz"</span>, <span class="st">"GSM8472851/matrix.mtx.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Nombre de la carpeta</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>dest_dir <span class="ot">&lt;-</span> <span class="st">"GSM8472852"</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Si la carpeta existe, eliminarla primero</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">dir.exists</span>(dest_dir)) {</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlink</span>(dest_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Carpeta eliminada: "</span>, dest_dir)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta eliminada: GSM8472852</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear la carpeta nuevamente</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Carpeta creada: "</span>, dest_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta creada: GSM8472852</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definir carpeta destino</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(dest_dir)) <span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Aumentar el tiempo de espera a 10 minutos (600 segundos)</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">600</span>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de URLs a descargar</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>urls <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472852/suppl/GSM8472852%5F2660238%5FTH%5FGata2%5FWT%5F4%5Fbarcodes%2Etsv%2Egz"</span>,</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472852/suppl/GSM8472852%5F2660238%5FTH%5FGata2%5FWT%5F4%5Ffeatures%2Etsv%2Egz"</span>,</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472852/suppl/GSM8472852%5F2660238%5FTH%5FGata2%5FWT%5F4%5Fmatrix%2Emtx%2Egz"</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Descargar cada archivo</span></span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (url <span class="cf">in</span> urls) {</span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>  dest_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(dest_dir, <span class="fu">basename</span>(url))</span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(dest_file)) {</span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Descargando: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(url, <span class="at">destfile =</span> dest_file, <span class="at">mode =</span> <span class="st">"wb"</span>)</span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Ya existe: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb35-22"><a href="#cb35-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb35-23"><a href="#cb35-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472852%5F2660238%5FTH%5FGata2%5FWT%5F4%5Fbarcodes%2Etsv%2Egz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472852%5F2660238%5FTH%5FGata2%5FWT%5F4%5Ffeatures%2Etsv%2Egz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472852%5F2660238%5FTH%5FGata2%5FWT%5F4%5Fmatrix%2Emtx%2Egz</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472852/GSM8472852%5F2660238%5FTH%5FGata2%5FWT%5F4%5Fbarcodes%2Etsv%2Egz"</span>, <span class="st">"GSM8472852/barcodes.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472852/GSM8472852%5F2660238%5FTH%5FGata2%5FWT%5F4%5Ffeatures%2Etsv%2Egz"</span>, <span class="st">"GSM8472852/features.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472852/GSM8472852%5F2660238%5FTH%5FGata2%5FWT%5F4%5Fmatrix%2Emtx%2Egz"</span>, <span class="st">"GSM8472852/matrix.mtx.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+</section>
+<section id="datos-r396q" class="level4">
+<h4 class="anchored" data-anchor-id="datos-r396q"><strong>Datos R396Q</strong></h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Nombre de la carpeta</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>dest_dir <span class="ot">&lt;-</span> <span class="st">"GSM8472853"</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Si la carpeta existe, eliminarla primero</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">dir.exists</span>(dest_dir)) {</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlink</span>(dest_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Carpeta eliminada: "</span>, dest_dir)</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta eliminada: GSM8472853</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear la carpeta nuevamente</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Carpeta creada: "</span>, dest_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta creada: GSM8472853</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definir carpeta destino</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(dest_dir)) <span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Aumentar el tiempo de espera a 10 minutos (600 segundos)</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">600</span>)</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de URLs a descargar</span></span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>urls <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM8472853&amp;format=file&amp;file=GSM8472853%5F2660239%5FTH%5FGata2%5FR396Q%5F1%5Fbarcodes%2Etsv%2Egz"</span>,          <span class="co"># barcodes (celulas)</span></span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM8472853&amp;format=file&amp;file=GSM8472853%5F2660239%5FTH%5FGata2%5FR396Q%5F1%5Ffeatures%2Etsv%2Egz"</span>,          <span class="co"># features (genes)</span></span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM8472853&amp;format=file&amp;file=GSM8472853%5F2660239%5FTH%5FGata2%5FR396Q%5F1%5Fmatrix%2Emtx%2Egz"</span>             <span class="co"># matrix de conteos cruda</span></span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Descargar cada archivo</span></span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (url <span class="cf">in</span> urls) {</span>
+<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a>  dest_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(dest_dir, <span class="fu">basename</span>(url))</span>
+<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(dest_file)) {</span>
+<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Descargando: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(url, <span class="at">destfile =</span> dest_file, <span class="at">mode =</span> <span class="st">"wb"</span>)</span>
+<span id="cb49-20"><a href="#cb49-20" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb49-21"><a href="#cb49-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Ya existe: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb49-22"><a href="#cb49-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb49-23"><a href="#cb49-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: ?acc=GSM8472853&amp;format=file&amp;file=GSM8472853%5F2660239%5FTH%5FGata2%5FR396Q%5F1%5Fbarcodes%2Etsv%2Egz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: ?acc=GSM8472853&amp;format=file&amp;file=GSM8472853%5F2660239%5FTH%5FGata2%5FR396Q%5F1%5Ffeatures%2Etsv%2Egz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: ?acc=GSM8472853&amp;format=file&amp;file=GSM8472853%5F2660239%5FTH%5FGata2%5FR396Q%5F1%5Fmatrix%2Emtx%2Egz</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472853/?acc=GSM8472853&amp;format=file&amp;file=GSM8472853%5F2660239%5FTH%5FGata2%5FR396Q%5F1%5Fbarcodes%2Etsv%2Egz"</span>, <span class="st">"GSM8472853/barcodes.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472853/?acc=GSM8472853&amp;format=file&amp;file=GSM8472853%5F2660239%5FTH%5FGata2%5FR396Q%5F1%5Ffeatures%2Etsv%2Egz"</span>, <span class="st">"GSM8472853/features.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472853/?acc=GSM8472853&amp;format=file&amp;file=GSM8472853%5F2660239%5FTH%5FGata2%5FR396Q%5F1%5Fmatrix%2Emtx%2Egz"</span>, <span class="st">"GSM8472853/matrix.mtx.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Nombre de la carpeta</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>dest_dir <span class="ot">&lt;-</span> <span class="st">"GSM8472854"</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Si la carpeta existe, eliminarla primero</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">dir.exists</span>(dest_dir)) {</span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlink</span>(dest_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Carpeta eliminada: "</span>, dest_dir)</span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta eliminada: GSM8472854</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear la carpeta nuevamente</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Carpeta creada: "</span>, dest_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta creada: GSM8472854</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definir carpeta destino</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(dest_dir)) <span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Aumentar el tiempo de espera a 10 minutos (600 segundos)</span></span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">600</span>)</span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de URLs a descargar</span></span>
+<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a>urls <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472854/suppl/GSM8472854%5F2660240%5FTH%5FGata2%5FR396Q%5F2%5Fbarcodes.tsv.gz"</span>,          <span class="co"># barcodes (celulas</span></span>
+<span id="cb63-10"><a href="#cb63-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472854/suppl/GSM8472854%5F2660240%5FTH%5FGata2%5FR396Q%5F2%5Ffeatures.tsv.gz"</span>,          <span class="co"># features (genes)</span></span>
+<span id="cb63-11"><a href="#cb63-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472854/suppl/GSM8472854%5F2660240%5FTH%5FGata2%5FR396Q%5F2%5Fmatrix.mtx.gz"</span>             <span class="co"># matrix de conteos cruda</span></span>
+<span id="cb63-12"><a href="#cb63-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb63-13"><a href="#cb63-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-14"><a href="#cb63-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Descargar cada archivo</span></span>
+<span id="cb63-15"><a href="#cb63-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (url <span class="cf">in</span> urls) {</span>
+<span id="cb63-16"><a href="#cb63-16" aria-hidden="true" tabindex="-1"></a>  dest_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(dest_dir, <span class="fu">basename</span>(url))</span>
+<span id="cb63-17"><a href="#cb63-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(dest_file)) {</span>
+<span id="cb63-18"><a href="#cb63-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Descargando: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb63-19"><a href="#cb63-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(url, <span class="at">destfile =</span> dest_file, <span class="at">mode =</span> <span class="st">"wb"</span>)</span>
+<span id="cb63-20"><a href="#cb63-20" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb63-21"><a href="#cb63-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Ya existe: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb63-22"><a href="#cb63-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb63-23"><a href="#cb63-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472854%5F2660240%5FTH%5FGata2%5FR396Q%5F2%5Fbarcodes.tsv.gz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472854%5F2660240%5FTH%5FGata2%5FR396Q%5F2%5Ffeatures.tsv.gz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472854%5F2660240%5FTH%5FGata2%5FR396Q%5F2%5Fmatrix.mtx.gz</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472854/GSM8472854%5F2660240%5FTH%5FGata2%5FR396Q%5F2%5Fbarcodes.tsv.gz"</span>, <span class="st">"GSM8472854/barcodes.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472854/GSM8472854%5F2660240%5FTH%5FGata2%5FR396Q%5F2%5Ffeatures.tsv.gz"</span>, <span class="st">"GSM8472854/features.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472854/GSM8472854%5F2660240%5FTH%5FGata2%5FR396Q%5F2%5Fmatrix.mtx.gz"</span>, <span class="st">"GSM8472854/matrix.mtx.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Nombre de la carpeta</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>dest_dir <span class="ot">&lt;-</span> <span class="st">"GSM8472855"</span></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Si la carpeta existe, eliminarla primero</span></span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">dir.exists</span>(dest_dir)) {</span>
+<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlink</span>(dest_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Carpeta eliminada: "</span>, dest_dir)</span>
+<span id="cb73-8"><a href="#cb73-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta eliminada: GSM8472855</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear la carpeta nuevamente</span></span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Carpeta creada: "</span>, dest_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta creada: GSM8472855</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definir carpeta destino</span></span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(dest_dir)) <span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Aumentar el tiempo de espera a 10 minutos (600 segundos)</span></span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">600</span>)</span>
+<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-7"><a href="#cb77-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de URLs a descargar</span></span>
+<span id="cb77-8"><a href="#cb77-8" aria-hidden="true" tabindex="-1"></a>urls <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb77-9"><a href="#cb77-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472855/suppl/GSM8472855%5F2660241%5FTH%5FGata2%5FR396Q%5F3%5F1%5Fbarcodes.tsv.gz"</span>,          <span class="co"># barcodes (celulas)</span></span>
+<span id="cb77-10"><a href="#cb77-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472855/suppl/GSM8472855%5F2660241%5FTH%5FGata2%5FR396Q%5F3%5F1%5Ffeatures.tsv.gz"</span>,          <span class="co"># features (genes)</span></span>
+<span id="cb77-11"><a href="#cb77-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472855/suppl/GSM8472855%5F2660241%5FTH%5FGata2%5FR396Q%5F3%5F1%5Fmatrix.mtx.gz"</span>             <span class="co"># matrix de conteos cruda</span></span>
+<span id="cb77-12"><a href="#cb77-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb77-13"><a href="#cb77-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-14"><a href="#cb77-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Descargar cada archivo</span></span>
+<span id="cb77-15"><a href="#cb77-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (url <span class="cf">in</span> urls) {</span>
+<span id="cb77-16"><a href="#cb77-16" aria-hidden="true" tabindex="-1"></a>  dest_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(dest_dir, <span class="fu">basename</span>(url))</span>
+<span id="cb77-17"><a href="#cb77-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(dest_file)) {</span>
+<span id="cb77-18"><a href="#cb77-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Descargando: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb77-19"><a href="#cb77-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(url, <span class="at">destfile =</span> dest_file, <span class="at">mode =</span> <span class="st">"wb"</span>)</span>
+<span id="cb77-20"><a href="#cb77-20" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb77-21"><a href="#cb77-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Ya existe: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb77-22"><a href="#cb77-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb77-23"><a href="#cb77-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472855%5F2660241%5FTH%5FGata2%5FR396Q%5F3%5F1%5Fbarcodes.tsv.gz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472855%5F2660241%5FTH%5FGata2%5FR396Q%5F3%5F1%5Ffeatures.tsv.gz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472855%5F2660241%5FTH%5FGata2%5FR396Q%5F3%5F1%5Fmatrix.mtx.gz</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472855/GSM8472855%5F2660241%5FTH%5FGata2%5FR396Q%5F3%5F1%5Fbarcodes.tsv.gz"</span>, <span class="st">"GSM8472855/barcodes.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472855/GSM8472855%5F2660241%5FTH%5FGata2%5FR396Q%5F3%5F1%5Ffeatures.tsv.gz"</span>, <span class="st">"GSM8472855/features.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472855/GSM8472855%5F2660241%5FTH%5FGata2%5FR396Q%5F3%5F1%5Fmatrix.mtx.gz"</span>, <span class="st">"GSM8472855/matrix.mtx.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Nombre de la carpeta</span></span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>dest_dir <span class="ot">&lt;-</span> <span class="st">"GSM8472856"</span></span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Si la carpeta existe, eliminarla primero</span></span>
+<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">dir.exists</span>(dest_dir)) {</span>
+<span id="cb87-6"><a href="#cb87-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlink</span>(dest_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb87-7"><a href="#cb87-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Carpeta eliminada: "</span>, dest_dir)</span>
+<span id="cb87-8"><a href="#cb87-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta eliminada: GSM8472856</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear la carpeta nuevamente</span></span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Carpeta creada: "</span>, dest_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta creada: GSM8472856</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definir carpeta destino</span></span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(dest_dir)) <span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Aumentar el tiempo de espera a 10 minutos (600 segundos)</span></span>
+<span id="cb91-5"><a href="#cb91-5" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">600</span>)</span>
+<span id="cb91-6"><a href="#cb91-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-7"><a href="#cb91-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de URLs a descargar</span></span>
+<span id="cb91-8"><a href="#cb91-8" aria-hidden="true" tabindex="-1"></a>urls <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb91-9"><a href="#cb91-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472856/suppl/GSM8472856%5F2660242%5FTH%5FGata2%5FR396Q%5F3%5F2%5Fbarcodes.tsv.gz"</span>,          <span class="co"># barcodes (celulas)</span></span>
+<span id="cb91-10"><a href="#cb91-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472856/suppl/GSM8472856%5F2660242%5FTH%5FGata2%5FR396Q%5F3%5F2%5Ffeatures.tsv.gz"</span>,          <span class="co"># features (genes)</span></span>
+<span id="cb91-11"><a href="#cb91-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM8472nnn/GSM8472856/suppl/GSM8472856%5F2660242%5FTH%5FGata2%5FR396Q%5F3%5F2%5Fmatrix.mtx.gz"</span>             <span class="co"># matrix de conteos cruda</span></span>
+<span id="cb91-12"><a href="#cb91-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb91-13"><a href="#cb91-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-14"><a href="#cb91-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Descargar cada archivo</span></span>
+<span id="cb91-15"><a href="#cb91-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (url <span class="cf">in</span> urls) {</span>
+<span id="cb91-16"><a href="#cb91-16" aria-hidden="true" tabindex="-1"></a>  dest_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(dest_dir, <span class="fu">basename</span>(url))</span>
+<span id="cb91-17"><a href="#cb91-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(dest_file)) {</span>
+<span id="cb91-18"><a href="#cb91-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Descargando: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb91-19"><a href="#cb91-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(url, <span class="at">destfile =</span> dest_file, <span class="at">mode =</span> <span class="st">"wb"</span>)</span>
+<span id="cb91-20"><a href="#cb91-20" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb91-21"><a href="#cb91-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Ya existe: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb91-22"><a href="#cb91-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb91-23"><a href="#cb91-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472856%5F2660242%5FTH%5FGata2%5FR396Q%5F3%5F2%5Fbarcodes.tsv.gz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472856%5F2660242%5FTH%5FGata2%5FR396Q%5F3%5F2%5Ffeatures.tsv.gz</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSM8472856%5F2660242%5FTH%5FGata2%5FR396Q%5F3%5F2%5Fmatrix.mtx.gz</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472856/GSM8472856%5F2660242%5FTH%5FGata2%5FR396Q%5F3%5F2%5Fbarcodes.tsv.gz"</span>, <span class="st">"GSM8472856/barcodes.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472856/GSM8472856%5F2660242%5FTH%5FGata2%5FR396Q%5F3%5F2%5Ffeatures.tsv.gz"</span>, <span class="st">"GSM8472856/features.tsv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.rename</span>(<span class="st">"GSM8472856/GSM8472856%5F2660242%5FTH%5FGata2%5FR396Q%5F3%5F2%5Fmatrix.mtx.gz"</span>, <span class="st">"GSM8472856/matrix.mtx.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+</section>
+<section id="metadata" class="level4">
+<h4 class="anchored" data-anchor-id="metadata"><strong>Metadata</strong></h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Nombre de la carpeta</span></span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>dest_dir <span class="ot">&lt;-</span> <span class="st">"metadata"</span></span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb101-4"><a href="#cb101-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Si la carpeta existe, eliminarla primero</span></span>
+<span id="cb101-5"><a href="#cb101-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">dir.exists</span>(dest_dir)) {</span>
+<span id="cb101-6"><a href="#cb101-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlink</span>(dest_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb101-7"><a href="#cb101-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Carpeta eliminada: "</span>, dest_dir)</span>
+<span id="cb101-8"><a href="#cb101-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta eliminada: metadata</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb103"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear la carpeta nuevamente</span></span>
+<span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb103-3"><a href="#cb103-3" aria-hidden="true" tabindex="-1"></a><span class="fu">message</span>(<span class="st">"Carpeta creada: "</span>, dest_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Carpeta creada: metadata</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb105"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Definir carpeta destino</span></span>
+<span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(dest_dir)) <span class="fu">dir.create</span>(dest_dir)</span>
+<span id="cb105-3"><a href="#cb105-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-4"><a href="#cb105-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Aumentar el tiempo de espera a 10 minutos (600 segundos)</span></span>
+<span id="cb105-5"><a href="#cb105-5" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">timeout =</span> <span class="dv">600</span>)</span>
+<span id="cb105-6"><a href="#cb105-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-7"><a href="#cb105-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de URLs a descargar</span></span>
+<span id="cb105-8"><a href="#cb105-8" aria-hidden="true" tabindex="-1"></a>urls <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb105-9"><a href="#cb105-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/series/GSE275nnn/GSE275213/matrix/GSE275213_series_matrix.txt.gz"</span>          </span>
+<span id="cb105-10"><a href="#cb105-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb105-11"><a href="#cb105-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-12"><a href="#cb105-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Descargar cada archivo</span></span>
+<span id="cb105-13"><a href="#cb105-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (url <span class="cf">in</span> urls) {</span>
+<span id="cb105-14"><a href="#cb105-14" aria-hidden="true" tabindex="-1"></a>  dest_file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(dest_dir, <span class="fu">basename</span>(url))</span>
+<span id="cb105-15"><a href="#cb105-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(dest_file)) {</span>
+<span id="cb105-16"><a href="#cb105-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Descargando: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb105-17"><a href="#cb105-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(url, <span class="at">destfile =</span> dest_file, <span class="at">mode =</span> <span class="st">"wb"</span>)</span>
+<span id="cb105-18"><a href="#cb105-18" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb105-19"><a href="#cb105-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"Ya existe: "</span>, <span class="fu">basename</span>(url))</span>
+<span id="cb105-20"><a href="#cb105-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb105-21"><a href="#cb105-21" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Descargando: GSE275213_series_matrix.txt.gz</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="importar-la-metadata-en-r" class="level3">
+<h3 class="anchored" data-anchor-id="importar-la-metadata-en-r"><strong>Importar la metadata en R</strong></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb107"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Leer metadatos de la serie</span></span>
+<span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a>meta <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="st">"metadata/GSE275213_series_matrix.txt.gz"</span>, </span>
+<span id="cb107-3"><a href="#cb107-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">skip =</span> <span class="dv">55</span>, <span class="co"># saltar las líneas iniciales de cabecera.</span></span>
+<span id="cb107-4"><a href="#cb107-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">header =</span> <span class="cn">TRUE</span>, <span class="co"># Que la celda tenga ese nombre en la columna</span></span>
+<span id="cb107-5"><a href="#cb107-5" aria-hidden="true" tabindex="-1"></a>                   <span class="at">fill =</span> <span class="cn">TRUE</span>) <span class="co"># rellena filas cortas con NA para que todas tengan el mismo número de columnas.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="guardar-en-formato-hdf5-de-10x" class="level2">
+<h2 class="anchored" data-anchor-id="guardar-en-formato-hdf5-de-10x">Guardar en formato HDF5 de 10x</h2>
+<p>Cada muestra tiene su propio archivo de barcodes, features, y matriz de conteos, mismos que se guardaron en objetos independientes.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb108"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="do">##Creando los archivos h5 </span></span>
+<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a>data.WT_replicate1<span class="ot">&lt;-</span> <span class="fu">Read10X</span>(<span class="at">data.dir =</span> <span class="st">"GSM8472849/"</span>)</span>
+<span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a>data.WT_replicate2<span class="ot">&lt;-</span> <span class="fu">Read10X</span>(<span class="at">data.dir =</span> <span class="st">"GSM8472850/"</span>)</span>
+<span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a>data.WT_replicate3<span class="ot">&lt;-</span> <span class="fu">Read10X</span>(<span class="at">data.dir =</span> <span class="st">"GSM8472851/"</span>)</span>
+<span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a>data.WT_replicate4<span class="ot">&lt;-</span> <span class="fu">Read10X</span>(<span class="at">data.dir =</span> <span class="st">"GSM8472852/"</span>)</span>
+<span id="cb108-6"><a href="#cb108-6" aria-hidden="true" tabindex="-1"></a>data.R396Q_replicate1<span class="ot">&lt;-</span> <span class="fu">Read10X</span>(<span class="at">data.dir =</span> <span class="st">"GSM8472853/"</span>)</span>
+<span id="cb108-7"><a href="#cb108-7" aria-hidden="true" tabindex="-1"></a>data.R396Q_replicate2<span class="ot">&lt;-</span> <span class="fu">Read10X</span>(<span class="at">data.dir =</span> <span class="st">"GSM8472854/"</span>)</span>
+<span id="cb108-8"><a href="#cb108-8" aria-hidden="true" tabindex="-1"></a>data.R396Q_replicate31<span class="ot">&lt;-</span> <span class="fu">Read10X</span>(<span class="at">data.dir =</span> <span class="st">"GSM8472855/"</span>)</span>
+<span id="cb108-9"><a href="#cb108-9" aria-hidden="true" tabindex="-1"></a>data.R396Q_replicate32<span class="ot">&lt;-</span> <span class="fu">Read10X</span>(<span class="at">data.dir =</span> <span class="st">"GSM8472856/"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="crear-objetos-seurat-y-fusionar-objetos" class="level2">
+<h2 class="anchored" data-anchor-id="crear-objetos-seurat-y-fusionar-objetos">Crear objetos Seurat y fusionar objetos</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear objetos Seurat a partir de las matrices de conteo</span></span>
+<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>sdata.wt_1 <span class="ot">&lt;-</span> <span class="fu">CreateSeuratObject</span>(data.WT_replicate1, <span class="at">project =</span> <span class="st">"wt_1"</span>)</span>
+<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a>sdata.wt_2 <span class="ot">&lt;-</span> <span class="fu">CreateSeuratObject</span>(data.WT_replicate2, <span class="at">project =</span> <span class="st">"wt_2"</span>)</span>
+<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a>sdata.wt_3 <span class="ot">&lt;-</span> <span class="fu">CreateSeuratObject</span>(data.WT_replicate3, <span class="at">project =</span> <span class="st">"wt_3"</span>)</span>
+<span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a>sdata.wt_4 <span class="ot">&lt;-</span> <span class="fu">CreateSeuratObject</span>(data.WT_replicate4, <span class="at">project =</span> <span class="st">"wt_4"</span>)</span>
+<span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a>sdata.mutant_1 <span class="ot">&lt;-</span> <span class="fu">CreateSeuratObject</span>(data.R396Q_replicate1, <span class="at">project =</span> <span class="st">"mutant_1"</span>)</span>
+<span id="cb109-7"><a href="#cb109-7" aria-hidden="true" tabindex="-1"></a>sdata.mutant_2 <span class="ot">&lt;-</span> <span class="fu">CreateSeuratObject</span>(data.R396Q_replicate2, <span class="at">project =</span> <span class="st">"mutant_2"</span>)</span>
+<span id="cb109-8"><a href="#cb109-8" aria-hidden="true" tabindex="-1"></a>sdata.mutant_31 <span class="ot">&lt;-</span> <span class="fu">CreateSeuratObject</span>(data.R396Q_replicate31, <span class="at">project =</span> <span class="st">"mutant_31"</span>)</span>
+<span id="cb109-9"><a href="#cb109-9" aria-hidden="true" tabindex="-1"></a>sdata.mutant_32 <span class="ot">&lt;-</span> <span class="fu">CreateSeuratObject</span>(data.R396Q_replicate32, <span class="at">project =</span> <span class="st">"mutant_32"</span>)</span>
+<span id="cb109-10"><a href="#cb109-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb109-11"><a href="#cb109-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Añadir metadatos indicando condición</span></span>
+<span id="cb109-12"><a href="#cb109-12" aria-hidden="true" tabindex="-1"></a>sdata.wt_1<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="st">"ctrl"</span></span>
+<span id="cb109-13"><a href="#cb109-13" aria-hidden="true" tabindex="-1"></a>sdata.wt_2<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="st">"ctrl"</span></span>
+<span id="cb109-14"><a href="#cb109-14" aria-hidden="true" tabindex="-1"></a>sdata.wt_3<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="st">"ctrl"</span></span>
+<span id="cb109-15"><a href="#cb109-15" aria-hidden="true" tabindex="-1"></a>sdata.wt_4<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="st">"ctrl"</span></span>
+<span id="cb109-16"><a href="#cb109-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb109-17"><a href="#cb109-17" aria-hidden="true" tabindex="-1"></a>sdata.mutant_1<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="st">"mtnt"</span></span>
+<span id="cb109-18"><a href="#cb109-18" aria-hidden="true" tabindex="-1"></a>sdata.mutant_2<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="st">"mtnt"</span></span>
+<span id="cb109-19"><a href="#cb109-19" aria-hidden="true" tabindex="-1"></a>sdata.mutant_31<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="st">"mtnt"</span></span>
+<span id="cb109-20"><a href="#cb109-20" aria-hidden="true" tabindex="-1"></a>sdata.mutant_32<span class="sc">$</span>type <span class="ot">&lt;-</span> <span class="st">"mtnt"</span></span>
+<span id="cb109-21"><a href="#cb109-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb109-22"><a href="#cb109-22" aria-hidden="true" tabindex="-1"></a>wt <span class="ot">&lt;-</span> <span class="fu">merge</span>(sdata.wt_1,</span>
+<span id="cb109-23"><a href="#cb109-23" aria-hidden="true" tabindex="-1"></a>            <span class="at">y =</span> <span class="fu">c</span>(sdata.wt_2,sdata.wt_3,sdata.wt_4))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Some cell names are duplicated across objects provided. Renaming to
+enforce unique cell names.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a>mut <span class="ot">&lt;-</span> <span class="fu">merge</span>(sdata.mutant_1,</span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">y =</span> <span class="fu">c</span>(sdata.mutant_2,sdata.mutant_31,sdata.mutant_32))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Some cell names are duplicated across objects provided. Renaming to
+enforce unique cell names.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(</span>
+<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a>  sdata.wt_1,sdata.wt_2,sdata.wt_3,sdata.wt_4,</span>
+<span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a>  sdata.mutant_1,sdata.mutant_2,sdata.mutant_31,sdata.mutant_32,</span>
+<span id="cb113-4"><a href="#cb113-4" aria-hidden="true" tabindex="-1"></a>  data.WT_replicate1,data.WT_replicate2,data.WT_replicate3,data.WT_replicate4,</span>
+<span id="cb113-5"><a href="#cb113-5" aria-hidden="true" tabindex="-1"></a>  data.R396Q_replicate1,data.R396Q_replicate2,data.R396Q_replicate31,data.R396Q_replicate32</span>
+<span id="cb113-6"><a href="#cb113-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb113-7"><a href="#cb113-7" aria-hidden="true" tabindex="-1"></a><span class="fu">gc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            used   (Mb) gc trigger    (Mb) limit (Mb)   max used    (Mb)
+Ncells   4041950  215.9    7690085   410.7         NA    6013347   321.2
+Vcells 557487784 4253.3 1650295169 12590.8      16384 1748776481 13342.2</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a>alldata <span class="ot">&lt;-</span> <span class="fu">merge</span>(wt, <span class="at">y =</span> mut)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Some cell names are duplicated across objects provided. Renaming to
+enforce unique cell names.</code></pre>
+</div>
+</div>
+<p>Visualización de la metadata:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(alldata<span class="sc">@</span>meta.data, <span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                       orig.ident nCount_RNA nFeature_RNA type
+AAACCCAAGACCAAAT-1_1_1       wt_1      18564         5436 ctrl
+AAACCCAAGAGCCGAT-1_1_1       wt_1      21182         5366 ctrl
+AAACCCAAGATCCCAT-1_1_1       wt_1       1033          591 ctrl
+AAACCCACAAACGGCA-1_1_1       wt_1       2353         1439 ctrl
+AAACCCACAAGGGCAT-1_1_1       wt_1      36065         7247 ctrl
+AAACCCACACAGTCAT-1_1_1       wt_1      46746         6707 ctrl
+AAACCCACATGAAGGC-1_1_1       wt_1      15834         4461 ctrl
+AAACCCACATGGTGGA-1_1_1       wt_1       1814         1066 ctrl
+AAACCCAGTCCAATCA-1_1_1       wt_1      24829         5756 ctrl
+AAACGAAAGAGTTGAT-1_1_1       wt_1      17615         5417 ctrl</code></pre>
+</div>
+</div>
+</section>
+<section id="calcular-la-calidad-de-muestras" class="level2">
+<h2 class="anchored" data-anchor-id="calcular-la-calidad-de-muestras">Calcular la calidad de muestras</h2>
+<ul>
+<li><p><strong>Genes mitocondriales (`^mt-)</strong></p>
+<ul>
+<li>Calidad celular (apoptosis, estrés).</li>
+</ul></li>
+<li><p><strong>Genes ribosomales (</strong><code>^Rp[sl]</code><strong>)</strong></p>
+<ul>
+<li>Altos porcentajes de genes ribosomales pueden reflejar células en estados de alta síntesis proteica o, en algunos casos, ruido técnico.</li>
+<li>Sirven para evaluar si ciertos clusters están dominados por ribosomas más que por señales biológicas relevantes.</li>
+</ul></li>
+<li><p><strong>Genes de hemoglobina (</strong><code>^Hb[^(p|e|s)]</code><strong>)</strong></p>
+<ul>
+<li>Se expresan en células de origen eritroide o contaminaciones de glóbulos rojos.</li>
+<li>Un alto porcentaje puede indicar contaminación de eritrocitos en la preparación de muestras.</li>
+</ul></li>
+<li><p><strong>Marcadores de plaquetas (</strong><code>Pecam1|Pf4</code><strong>)</strong></p>
+<ul>
+<li>Se usan para detectar contaminación por plaquetas o subpoblaciones plaquetarias.</li>
+<li>Ayudan a decidir si excluir esas células o interpretarlas como una población real.</li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Genes mitocondriales (mt- en mouse)</span></span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a>alldata <span class="ot">&lt;-</span> <span class="fu">PercentageFeatureSet</span>(alldata, <span class="st">"^mt-"</span>, <span class="at">col.name =</span> <span class="st">"percent_mito"</span>)</span>
+<span id="cb119-3"><a href="#cb119-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb119-4"><a href="#cb119-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Genes ribosomales (Rps / Rpl en mouse)</span></span>
+<span id="cb119-5"><a href="#cb119-5" aria-hidden="true" tabindex="-1"></a>alldata <span class="ot">&lt;-</span> <span class="fu">PercentageFeatureSet</span>(alldata, <span class="st">"^Rp[sl]"</span>, <span class="at">col.name =</span> <span class="st">"percent_ribo"</span>)</span>
+<span id="cb119-6"><a href="#cb119-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb119-7"><a href="#cb119-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Genes de hemoglobina (Hb en mouse)</span></span>
+<span id="cb119-8"><a href="#cb119-8" aria-hidden="true" tabindex="-1"></a>alldata <span class="ot">&lt;-</span> <span class="fu">PercentageFeatureSet</span>(alldata, <span class="st">"^Hb[^(p|e|s)]"</span>, <span class="at">col.name =</span> <span class="st">"percent_hb"</span>)</span>
+<span id="cb119-9"><a href="#cb119-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb119-10"><a href="#cb119-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Marcadores de plaquetas (nombres en formato mouse)</span></span>
+<span id="cb119-11"><a href="#cb119-11" aria-hidden="true" tabindex="-1"></a>alldata <span class="ot">&lt;-</span> <span class="fu">PercentageFeatureSet</span>(alldata, <span class="st">"Pecam1|Pf4"</span>, <span class="at">col.name =</span> <span class="st">"percent_plat"</span>)</span>
+<span id="cb119-12"><a href="#cb119-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb119-13"><a href="#cb119-13" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(alldata[[]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                       orig.ident nCount_RNA nFeature_RNA type percent_mito
+AAACCCAAGACCAAAT-1_1_1       wt_1      18564         5436 ctrl     2.343245
+AAACCCAAGAGCCGAT-1_1_1       wt_1      21182         5366 ctrl     2.525729
+AAACCCAAGATCCCAT-1_1_1       wt_1       1033          591 ctrl     7.357212
+AAACCCACAAACGGCA-1_1_1       wt_1       2353         1439 ctrl     5.439864
+AAACCCACAAGGGCAT-1_1_1       wt_1      36065         7247 ctrl     2.806045
+AAACCCACACAGTCAT-1_1_1       wt_1      46746         6707 ctrl     4.216404
+                       percent_ribo  percent_hb percent_plat
+AAACCCAAGACCAAAT-1_1_1    18.185736 0.086188321  0.000000000
+AAACCCAAGAGCCGAT-1_1_1    23.737135 0.033046927  0.009441979
+AAACCCAAGATCCCAT-1_1_1    21.200387 0.000000000  0.000000000
+AAACCCACAAACGGCA-1_1_1     8.329792 0.042498938  0.042498938
+AAACCCACAAGGGCAT-1_1_1    21.486205 0.002772771  0.005545543
+AAACCCACACAGTCAT-1_1_1    19.257263 0.055619732  0.000000000</code></pre>
+</div>
+</div>
+<p>Los siguientes plots muestran la distribución de los datos y así definir los valores que se utilizarán en el filtrado de datos. Estas visualizaciones permiten ajustar los parámetros a nuestros datos.</p>
+<p>Para el Volcano Plot, en la gráfica del número de Features (genes) se observa que los datos tienen una amplia distribución, desde valores pequeños como 200 hasta datos que alcanzan un valor de ~12,000. Escogimos quedarnos con células que tienen hasta 6,000 genes. Esto debido a que fue el mismo umbral ocupado en el artículo original.</p>
+<p>Para la segunda gráfica, Count_RNA, indica el número total de UMIs que hay en cada célula. Se obtuvieron porcentajes de lecturas mitocondriales bastante elevadas, por lo que decidimos disminuir la rigidez del filtrado: en vez de quedarnos con las células que tuvieran un porcentaje menor al 5, nos quedamos con células que tienen un porcentaje menor al 10.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a>feats <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"nFeature_RNA"</span>, <span class="st">"nCount_RNA"</span>, <span class="st">"percent_mito"</span>, <span class="st">"percent_ribo"</span>, <span class="st">"percent_hb"</span>, <span class="st">"percent_plat"</span>)</span>
+<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a><span class="co"># feats &lt;- c("nFeature_RNA", "nCount_RNA", "percent_mito")</span></span>
+<span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a><span class="fu">VlnPlot</span>(alldata, <span class="at">group.by =</span> <span class="st">"orig.ident"</span>, <span class="at">split.by =</span> <span class="st">"type"</span>, <span class="at">features =</span> feats, <span class="at">pt.size =</span> <span class="fl">0.1</span>, <span class="at">ncol =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="NormalizacionDatos_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Este segundo plot (panel de la izquierda) nos permite observar la cantidad de ARN que tienen las células (eje X) y el porcentaje de ADN mitocondrial (eje Y). En general se observa que hay muchas células que tienen muy poco ARN, pero tienen un porcentaje mitocondrial muy alto, lo cual no es lo óptimo. Estos son indicadores de que las células están muertas o ‘rotas’.</p>
+<p>En el panel de la derecha se observa el número de genes que hay en las células. La nube de puntos se concentra por encima de 3000, aproximadamente; por lo que, al seleccionar solo a las células que tienen menos de 2500 genes, estamos perdiendo más de la mitad de las células. Es por esto, que después de aplicar los filtros, nos quedamos con muy pocos datos.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb122"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a>plot1 <span class="ot">&lt;-</span> <span class="fu">FeatureScatter</span>(alldata, <span class="at">feature1 =</span> <span class="st">"nCount_RNA"</span>, <span class="at">feature2 =</span> <span class="st">"percent_mito"</span>, <span class="at">group.by =</span> <span class="st">"orig.ident"</span>, <span class="at">pt.size =</span> .<span class="dv">5</span>)</span>
+<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a>plot2 <span class="ot">&lt;-</span> <span class="fu">FeatureScatter</span>(alldata, <span class="at">feature1 =</span> <span class="st">"nCount_RNA"</span>, <span class="at">feature2 =</span> <span class="st">"nFeature_RNA"</span>, <span class="at">group.by =</span> <span class="st">"orig.ident"</span>, <span class="at">pt.size =</span> .<span class="dv">5</span>)</span>
+<span id="cb122-3"><a href="#cb122-3" aria-hidden="true" tabindex="-1"></a>plot1 <span class="sc">+</span> plot2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="NormalizacionDatos_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="filtrado-de-células-con-baja-calidad" class="level2">
+<h2 class="anchored" data-anchor-id="filtrado-de-células-con-baja-calidad">Filtrado de células con baja calidad</h2>
+<p>Se filtran las células con al menos 200 genes detectados, y los genes deben estar expresados en al menos tres células. Estos valores dependen del método de preparación de la biblioteca utilizado.</p>
+<ul>
+<li><p><strong>Genes mitocondriales:</strong> Una alta proporción de lecturas mitocondriales suele indicar células dañadas o en apoptosis. Por eso se filtran células con &lt; 10% de lecturas mitocondriales.</p></li>
+<li><p><strong>Genes ribosomales:</strong> Son muy abundantes y pueden dominar la señal, pero no aportan información biológica específica sobre el estado celular. Control de sesgo técnico, pero sin eliminar células normales con actividad ribosomal fisiológica.</p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb123"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="co"># nuevos valores de filtrado</span></span>
+<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>data.filt <span class="ot">&lt;-</span> <span class="fu">subset</span>(alldata, <span class="at">subset =</span> </span>
+<span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a>                      nFeature_RNA <span class="sc">&gt;</span> <span class="dv">200</span> <span class="sc">&amp;</span> nFeature_RNA <span class="sc">&lt;</span> <span class="dv">6000</span> <span class="sc">&amp;</span> <span class="do">##el maximo son 6000 genes, porque seguimos el filtrado que se menciona en el articulo</span></span>
+<span id="cb123-4"><a href="#cb123-4" aria-hidden="true" tabindex="-1"></a>                      percent_mito <span class="sc">&lt;</span> <span class="dv">10</span> <span class="sc">&amp;</span> percent_ribo <span class="sc">&lt;</span> <span class="dv">25</span>)</span>
+<span id="cb123-5"><a href="#cb123-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(data.filt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 32285 35283</code></pre>
+</div>
+</div>
+<p>Hay 32, 285 genes detectados en 35,283 células. Además, se hizo una revisión del número de células recuperadas, el número de lecturas totales por muestra, así como el promedio de lecturas y genes por célula. El número de células recuperadas rondan desde 1702 a 3019 en las muestras mutantes, mientras que en las muestras control, la muestra con menos células cuenta con 5533 células y la que tiene más, con 7270 células. Las lecturas por célula rondan entre 10,996 y 15,568.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb125"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a>metricas <span class="ot">&lt;-</span> data.filt<span class="sc">@</span>meta.data <span class="sc">%&gt;%</span></span>
+<span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(orig.ident) <span class="sc">%&gt;%</span></span>
+<span id="cb125-3"><a href="#cb125-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb125-4"><a href="#cb125-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">celulas_recuperadas =</span> <span class="fu">n</span>(),</span>
+<span id="cb125-5"><a href="#cb125-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">lecturas_totales    =</span> <span class="fu">sum</span>(nCount_RNA),</span>
+<span id="cb125-6"><a href="#cb125-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">lecturas_por_celula =</span> <span class="fu">round</span>(<span class="fu">mean</span>(nCount_RNA), <span class="dv">1</span>),   <span class="co"># profundidad media</span></span>
+<span id="cb125-7"><a href="#cb125-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">genes_por_celula    =</span> <span class="fu">round</span>(<span class="fu">mean</span>(nFeature_RNA), <span class="dv">1</span>)</span>
+<span id="cb125-8"><a href="#cb125-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb125-9"><a href="#cb125-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(orig.ident)</span>
+<span id="cb125-10"><a href="#cb125-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb125-11"><a href="#cb125-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(metricas)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 5
+  orig.ident celulas_recuperadas lecturas_totales lecturas_por_celula
+  &lt;chr&gt;                    &lt;int&gt;            &lt;dbl&gt;               &lt;dbl&gt;
+1 mutant_1                  2960         45687846              15435.
+2 mutant_2                  3019         46175034              15295.
+3 mutant_31                 2100         32692921              15568.
+4 mutant_32                 1702         25139935              14771.
+5 wt_1                      5690         70485137              12388.
+6 wt_2                      7270         79941387              10996.
+7 wt_3                      7009         85044737              12134.
+8 wt_4                      5533         64122232              11589.
+# ℹ 1 more variable: genes_por_celula &lt;dbl&gt;</code></pre>
+</div>
+</div>
+</section>
+<section id="normalización-de-datos" class="level2">
+<h2 class="anchored" data-anchor-id="normalización-de-datos">Normalización de datos</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb127"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a>R396Q <span class="ot">&lt;-</span> <span class="fu">NormalizeData</span>(data.filt, <span class="at">verbose =</span> F)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="guardar-dataset-y-liberación-de-memoria" class="level2">
+<h2 class="anchored" data-anchor-id="guardar-dataset-y-liberación-de-memoria">Guardar dataset y liberación de memoria</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb128"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"output"</span>, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(R396Q, <span class="at">file =</span> <span class="st">"output/ScRNAseq_R396Q.rds"</span>)</span>
+<span id="cb128-3"><a href="#cb128-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">--- Liberando memoria ---</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+--- Liberando memoria ---</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb130"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">ls</span>())</span>
+<span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb130-3"><a href="#cb130-3" aria-hidden="true" tabindex="-1"></a><span class="fu">gc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          used  (Mb) gc trigger    (Mb) limit (Mb)   max used    (Mb)
+Ncells 4381140 234.0    7690086   410.7         NA    7690086   410.7
+Vcells 8596756  65.6 1584347362 12087.7      16384 1973664479 15057.9</code></pre>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
