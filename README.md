@@ -2,15 +2,15 @@
 
 título del reporte; integrantes y programa cursado; fecha, materia y semestre; abstract del trabajo; enlace al reporte renderizado; explicación detallada de los pasos y scripts; y referencias utilizadas.
 
-Autoras: Victoria Lelis, Renata Sandoval y Ariana Silva
+**Autoras:** Victoria Lelis, Renata Sandoval y Ariana Silva
 
 Junio, 2026
 
-Curso: Bioinformática aplicada al análisis de transcriptómica diferencial
+**Curso:** Bioinformática aplicada al análisis de transcriptómica diferencial
 
 Octavo semestre de la Licenciatura en Ciencias Genómicas, Universidad Nacional Autónoma de México, Unidad Juriquilla
 
-Docentes del curso de bioinformática: Dra. Evelia Coss, Dr. Jerónimo Miranda, Dr. Wilbert Gutiérrez
+**Docentes del curso de bioinformática:** Dra. Evelia Coss, Dr. Jerónimo Miranda, Dr. Wilbert Gutiérrez
 
 Este es un repositorio en el que describimos paso a paso el proceso llevado a cabo durante el análisis bioinformático del proyecto enfocado en secuenciación de ARN a nivel de célula única.
 
