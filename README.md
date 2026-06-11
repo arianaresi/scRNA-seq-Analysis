@@ -41,12 +41,11 @@ El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/aria
 
 En primer lugar, se realizó la identificación de genes marcadores en cada clúster en comparación con todos los demás (prueba de Wilcoxon). Los resultados se visualizan mediante mapas de calor, diagramas de puntos y diagramas de violín. Después, se pudo implementar la anotación automatizada con SingleR: cada célula se etiqueta automáticamente compara su perfil de expresión con la referencia MouseRNAseqData. Los genes de especial interés se visualizaron en UMAP.
 
-El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/tree/main/Reducción%20de%20dimensiones).
+El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/tree/main/Anotación%20de%20tipos%20celulares).
   
+
 **4. Análisis de expresión diferencial**
 
 Para comparar la expresión génica entre las condiciones WT y R396Q/+, se utilizó un enfoque de pseudobulk. Las cuentas de todas las células de cada ratón individual se agregan en un único perfil de expresión por muestra. A continuación, se ajustó un modelo GLM con edgeR.
 
-El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/tree/main/Reducción%20de%20dimensiones).
-
-**Para leer la discusión y acceder a las referencias, haga click [aquí]().
+El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/tree/main/Reducción%20de%20dimensiones). Además, en estos archivos también se puede acceder a la disución y referencias del proyecto.
