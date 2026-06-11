@@ -1,7 +1,9 @@
 ---
-title: "Descarga y Normalizacion"
-author: "Renata Sandoval, Victoria Lelis y Ariana Silva"
-format: html
+title: "Descarga y Normalización"
+author: "Victoria Lelis, Renata Sandoval & Ariana Silva"
+format:
+  html:
+    embed-resources: true
 editor: visual
 ---
 
