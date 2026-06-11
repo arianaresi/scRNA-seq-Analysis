@@ -1,7 +1,5 @@
 # Análisis transcriptómico de células LSK con mutación R396Q en GATA2 mediante scRNA-seq
 
-título del reporte; integrantes y programa cursado; fecha, materia y semestre; abstract del trabajo; enlace al reporte renderizado; explicación detallada de los pasos y scripts; y referencias utilizadas.
-
 **Autoras:** Victoria Lelis, Renata Sandoval y Ariana Silva
 
 Junio, 2026
