@@ -1,6 +1,9 @@
 ---
-title: "parte_3"
-format: html
+title: "Anotación de tipos celulares"
+author: "Victoria Lelis, Renata Sandoval & Ariana Silva"
+format:
+  html:
+    embed-resources: true
 editor: visual
 ---
 
