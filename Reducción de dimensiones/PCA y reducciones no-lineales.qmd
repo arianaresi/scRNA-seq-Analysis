@@ -1,7 +1,9 @@
 ---
 title: "PCA y reducciones no-lineales"
-author: "Victoria Lelis, Renata Sandoval y Ariana Silva"
-format: html
+author: "Victoria Lelis, Renata Sandoval & Ariana Silva"
+format:
+  html:
+    embed-resources: true
 editor: visual
 ---
 
