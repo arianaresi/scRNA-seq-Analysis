@@ -1,0 +1,352 @@
+---
+title: "parte 4"
+format: html
+editor: visual
+---
+
+# Poblaciones celulares y expresión diferencial
+
+### Cargar paquetes
+
+```{r}
+library(tidyverse)
+library(patchwork)
+# BiocManager::install(c("SingleCellExperiment","SingleR","celldex"),ask=F)
+library(viridis)
+library(Seurat)
+# Anotacion de tipos celulares
+library(SingleCellExperiment)
+library(SingleR)
+library(celldex)
+# Expresion diferencial
+library(edgeR)
+library(RColorBrewer)
+```
+
+### Cargar el dataset de R396Q3k_integrated
+
+```{r, warning=F, message=FALSE}
+# Cargar el objeto desde el archivo RDS
+R396Q3k_integrated <- readRDS("output/R396Q3_integrated.rds")
+
+# Unir las capas del assay activo (ej. RNA)
+R396Q3k_integrated <- JoinLayers(R396Q3k_integrated)
+
+# convertir de objeto seurat a SingleCellExperiment
+sce <- as.SingleCellExperiment(R396Q3k_integrated)
+
+# descargar referencia de ratitas
+ref.set <- celldex::MouseRNAseqData()
+
+# Set the identity as louvain with resolution 0.5
+sel.clust <- "RNA_snn_res.0.5"
+# La identidad activa (active.ident) es la variable que Seurat usa por defecto para agrupar células en funciones como FindMarkers, DimPlot, etc
+alldata <- SetIdent(R396Q3k_integrated, value = sel.clust)
+# Número de células en cada cluster 
+table(alldata@active.ident)
+```
+
+## **Asignar identidad celular a los clusters (**`SingleR` **+** `celldex`**)**
+
+Ahora etiquetaremos las células utilizando el objeto \`SingleCellExperiment\`, con la referencia establecida anteriormente.
+
+```{r}
+# Etiquetas main
+pred_main <- SingleR::SingleR(test = sce, 
+                              ref = ref.set, 
+                              labels = ref.set$label.main)
+```
+
+En este UMAP muestra una gran nube de puntos que se encuentra casi en el centro del gráfico. Esta nube tiene diferentes tipos celulares que pertenecen al linaje mieloide (células que se originan en la médula ósea) y se encuentrasn células como los linfocitos B y T, monocitos, macrófagos y eritrocitos. Y esto hace sentido al síndrome mielodisplásico (MDS) y a la leucemia mieloide aguda (AML), ya que, aquí, el linaje mieloide se expande de forma masiva y descontrolada. E incluso, los puntos del UMAP, al estar sobrepuestos, nos indican que las células, anteriormente mencionadas, comparten perfiles de expresión muy continuos, o incluso iguales, lo cual puede estar relacionado a procesos de diferenciación anormal. Adicionalmente, se puede observar cómo hay clusters de células que están bien definidas.
+
+```{r}
+lbls.keep <- table(pred_main$labels) > 10
+
+R396Q3k_annotated <- R396Q3k_integrated
+R396Q3k_annotated$SingleR.labels <- ifelse(lbls.keep[pred_main$labels], pred_main$labels, 'Other')
+
+DimPlot(R396Q3k_annotated, reduction='umap', group.by='SingleR.labels')
+```
+
+Es bueno ver que, aunque SingleR no utiliza los clústeres que fueron calculados anteriormente, las etiquetas parecen coincidir bastante bien con esos clústeres.
+
+¿Cuántas celdas tienen etiquetas de baja fiabilidad?
+
+10 de los clústeres parecen tener etiquetas de baja fiabilidad, aunque para esto, es importante recordar que se está trabajando con datos de células progenitoras hematopoyéticas y SingleR utiliza bases de datos de células maduras, por lo que tiene sentido que varios clústeres tengan esta etiqueta.
+
+```{r}
+unique(pred_main$pruned.labels)
+```
+
+¿Cuántas células hay en cada etiqueta original?
+
+```{r}
+table(pred_main$labels)
+```
+
+¿Cuántas células quedaron en cada etiqueta después de la depuración?
+
+```{r}
+# Opción B
+table(pred_main$pruned.labels)
+```
+
+Resume ese vector lógico, mostrando cuántos valores son `TRUE` (es decir, cuántos `NA` hay) y cuántos son `FALSE` (no faltantes).
+
+```{r}
+summary(is.na(pred_main$pruned.labels))
+```
+
+## Visualización de los datos
+
+En estas gráficas se nos muestra qué tan segura fue la asignación de SingleR para cada célula. Los puntos naranjas signfican valores demasiado bajos, que el programa decide que estas asignaciones son ambiguas, y puede clasificar a la célula como *unassigned*. Esto lo hace para evitar falsos positivos.
+
+Por ejemplo, en el caso de las células NK, donde no hay puntos naranjas y el valor delta es de \~3.8, la asignación de los datos es bastante robusta. Por otro lado, los monocitos, macrófagos, las células T y las céluals endoteliales, a pesar de que algunas tienen puntos naranjas, sus valores delta son bastante pequeños (\<1), por lo que su asignación puede no ser tan confiable como en otros casos.
+
+```{r, warning=FALSE, message=FALSE}
+plotDeltaDistribution(pred_main, ncol = 4, dots.on.top = FALSE)
+```
+
+El siguiente heatmap muestra las **probabilidades o scores de clasificación** que el modelo asignó a cada célula respecto a las posibles etiquetas.
+
+Algo que podemos resaltar de este gráfico es que los *scores* de las células B y células T son muy parecidos (franja amarilla), esto lo podemos asociar a que el análisis no pudo identificar claramente entre estos dos tipos de células. Esta gran población en estos dos grupos celulares podrían estar relacionados con una proliferación descontrolada.
+
+```{r}
+plotScoreHeatmap(pred_main)
+```
+
+En lugar de trabajar únicamente con el marco de datos \`singleR\`, se añadieron las etiquetas al objeto de datos Seurat como un campo de metadatos; así pues, añadamos las etiquetas de tipo celular a nuestro objeto Seurat.
+
+```{r}
+#add main labels to object
+R396Q3k_annotated[['immgen_singler_main']] = rep('NA', ncol(R396Q3k_annotated))
+R396Q3k_annotated$immgen_singler_main[rownames(pred_main)] = pred_main$labels
+```
+
+Al comparar las etiquetas obtenidas de las dos fuentes, se observan discrepancias interesantes. Resolverlas requiere una revisión manual. Sin embargo, se pueden apreciar muchas clasificaciones reveladoras. Por ejemplo, el pequeño grupo 17 se identifica repetidamente como células B plasmáticas. Esta subpoblación distintiva presenta marcadores como CD38 y CD59.
+
+Ahora, de toda la población de células que tenemos, nos interesa particularmente la expresión del gen *Gata2*. El siguiente gráfico muestra las células que tienen un alto nivel de expresión de este gen (puntos rojos).\
+*Gata2* es un factor de transcripción, por lo que los cluster que están en la periferia y son de color morado significa que ya son células que están completamente maduras y diferenciadas, por lo que ya no requieren de este factor transcripcional. La nube que tiene puntos verdes podría indicar que son células que están diferenciandose de forma anormal y por lo tanto también van perdiendo la actividad de *Gata2.*
+
+Pero lo más interesante son los puntos rojos que están agrupados en el centro. Asociamos este pequeño cúmulo de datos con los blastos (células sanguíneas inmaduras) que no se diferenciaron y tienen una proliferación descontrolada. Esto provoca que la médula osea termine llena de células inmaduras y van desplazando a aquellas células que sí están sanas (y por esto en las gráficas anteriores se han observado grandes masas de células pertenecientes al linaje mieloide que comparten perfiles de expresión génica muy parecidos).
+
+*Gata2* ayuda a mantener a las células madre hematopoyéticas en un estado no diferenciado y favorece su replicación. Como los blastos no se diferencian, el Gata2 se mantiene activo y sus niveles de expresión son altos (puntos rojos que se observan en la siguiente gráfica).
+
+```{r, warning=FALSE, message=FALSE}
+FeaturePlot(R396Q3k_annotated, "Gata2") + scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral")))
+```
+
+En el trabajo original se menciona que la mutación R396Q en *Gata2* aumenta la expresión del gen *Tgfbr3,* el cual es un receptor de la citoquina TGF-ß. Este último participa en la inhibición de las vías de diferenciación de los linfocitos, eritrocitos y megacariocitos. En la siguiente gráfica se observa cómo, en la misma región en donde hay una alta expresión de Gata2 (gráfica anterior), igualmente hay una gran expresión de *Tgfbr3.* Lo cual coincide con que Gata2 aumenta los niveles de expresión de *Tgfbr3* reportados en el trabajo de Hall *et al.* (2024).
+
+```{r, warning=FALSE, message=FALSE}
+FeaturePlot(R396Q3k_annotated, "Tgfbr3") + scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral")))
+```
+
+## Guardar dataset y liberación de memoria
+
+```{r, eval=FALSE}
+saveRDS(R396Q3k_annotated, file = "output/R396Q3_singler_annotated.rds")
+cat("\n--- Liberando memoria ---\n")
+
+rm(list = ls())
+
+gc()
+```
+
+## **Visualización de datos**
+
+En esta sección se observan las roporciones obtenidas de los tipos celulares y las muestras procesadas.
+
+Específicamente, se muestra una gráfica de barras que representa la proporción de distintos tipos celulares a lo largo de las muestras. En el eje Y, se muestra de 0 a 1 (0% a 100%) la cantidad de células, mientras que en el eje X se menciona qué muestra está representada. En el panel de colores, cada color indica un tipo celular anotado por SingleR.
+
+En las muestras con la mutación R396Q en *Gata2,* las células T aparecen como la fracción más grande. Sin embargo, para realizar más inferencias sobre las poblaciones celulares se decidió colapsar las distintas muestras dependiendo de su condición biológica para simplificar su interpretación.
+
+```{r}
+ggplot(R396Q3k_annotated[[]], aes(x = orig.ident, fill = immgen_singler_main)) + 
+  geom_bar(position = "fill") + 
+  scale_fill_viridis(discrete = TRUE)
+```
+
+Una vez se encuentran colapsadas las muestras, se observa un aumento en la proporción de célilas con perfil transcipcional mieloide (monocítico) en las células mutantes respecto a las células WT, lo que coincide con el sesgo mieloide descritos en el artículo original de Hall et al. (2025). Además, se observa un aumento de progenitores linfoides de células T en las células mutantes respecto a las WT, lo que pordría ser consistente con el aumento de Lymphoid Progenitors (Lymp Prog) reportado en el artículo original, aunque es importante mencionar que esta correspondencia es una inferencia, ya que SingleR no cuenta con categorías específicas para progenitores tempranos.
+
+```{r}
+# Agregar columna de condición
+R396Q3k_annotated$condition <- ifelse(
+  grepl("wt", R396Q3k_annotated$orig.ident), "WT", "R396Q/+"
+)
+
+ggplot(R396Q3k_annotated[[]], 
+       aes(x = condition, fill = immgen_singler_main)) + 
+  geom_bar(position = "fill") + 
+  scale_fill_viridis(discrete = TRUE) +
+  labs(title = "Composición celular por condición",
+       y = "Proporción", x = "Condición")
+```
+
+En esta gráfica se examina la contribución de cada muestra por tipo celular anotado, se observa que la mayoría de poblaciones presentan aportaciones balanceadas entre muestras, a excepción de las células dendríticas, que están representadas por la muestra WT2, lo que puede indicar una variación técnica específica de esta muestra.
+
+```{r}
+ggplot(R396Q3k_annotated[[]], aes(x = immgen_singler_main, fill = orig.ident)) + 
+  geom_bar(position = "fill") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  scale_fill_viridis(discrete = TRUE)
+```
+
+¿Cómo se corresponden nuestras anotaciones de tipos celulares con los grupos que definimos anteriormente?
+
+La masa central del UMAP se encuentra dominada por células B, monocitos y células T mezcladas. Además, también se muestran clústeres separados, como la población de eritrocitos y también otra de células B y células NK.
+
+Aunque podemos ver múltiples poblaciones celulares, algunas se encuentran mezcladas, como las células B y T, así como los monocitos, lo que revela que la anotación mediante SingleR con la referencia ImmGen muestra limitaciones en el contexto de las células LSK.
+
+```{r}
+
+DimPlot(R396Q3k_annotated, group.by = c("immgen_singler_main")) + 
+  # Eliminar axis
+  NoAxes()
+
+```
+
+## **Control del Ciclo celular**
+
+El análisis del ciclo celular se realizó con un doble propósito: identificar posibles sesgos técnicos en la separación de clusters derivados del estado proliferativo de las células y explorar si existen diferencias en la distribución de fases entre células mutantes y WT.
+
+```{r}
+# Cargar listas de genes
+s.genes <- cc.genes.updated.2019$s.genes
+g2m.genes <- cc.genes.updated.2019$g2m.genes
+
+# Asignar ciclo celular
+R396Q3k_annotated <- CellCycleScoring(R396Q3k_annotated,
+                               s.features = s.genes,
+                               g2m.features = g2m.genes,
+                               set.ident = TRUE)
+
+table(R396Q3k_annotated$orig.ident)
+```
+
+La distribución de los scores S y G2M fue comparable tanto en las muestras mutantes como en la WT, con la mayoría de las células presentando puntajes cercanos a cero, lo que indicando predominio de células en fase G1, lo que es consistente con la quiescencia celular esperada en progenitores hematopoyéticos.
+
+```{r}
+VlnPlot(R396Q3k_annotated, features = c("S.Score", "G2M.Score"), group.by = "orig.ident", ncol = 2, pt.size = .1)
+```
+
+La puntuación del ciclo celular parece estar relacionada hasta cierto grado con algunos clústeres. Los scores S y G2M más altos se observan en el clúster separado de células B en la parte superior, al igual que en los clústeres periféricos de granulocitos y monocitos, lo que los convierte en las regiones más proliferativas. Algo similar ocurre en parte de la región central que mezcla células B, monocitos y algunas células T, donde también se observan scores moderadamente elevados.
+
+```{r}
+FeaturePlot(R396Q3k_annotated, features = c("S.Score","G2M.Score"),label.size = 4,repel = T,label = T) & 
+  theme(plot.title = element_text(size=10))
+```
+
+Al visualizar directamente la fase asignada en el UMAP, se observa una separación entre células en fase S y G1 en la región central, y los clústeres de granulocitos y el clúster superior muestran un enriquecimiento en células G2M y S, lo que sugiere que el ciclo celular podría estar contribuyendo parcialmente a la estructura del UMAP.
+
+```{r}
+DimPlot(R396Q3k_annotated, reduction = 'umap', group.by = "Phase")
+```
+
+Al graficar S.Score contra G2M.Score coloreado por fase asignada, se observa que las tres fases presentan una separación general, aunque con un solapamiento notable entre las células en fase S y G2M. Esto es consistente con lo que menciona la literatura, ya que Seurat realiza la predicción de fase con un umbral predeterminado de cero que no siempre se ajusta bien a todos los datos.
+
+Además, es importante considerar que las listas de genes utilizadas están diseñadas para datos humanos, por lo que su aplicación en datos de ratón representa una limitación adicional en la interpretación. Por estas razones, el ciclo celular se tuvo en cuenta como limitación en la interpretación downstream, sin realizar regresión adicional.
+
+```{r}
+FeatureScatter(R396Q3k_annotated, "S.Score", "G2M.Score", group.by = "Phase")
+```
+
+## Análisis de expresión diferencial con pseudobulk
+
+Para el análisis de expresión diferencial entre condiciones se optó por un enfoque pseudobulk con edgeR. Este método agrega los conteos de todas las células de cada muestra individual, generando un perfil de expresión por ratón — 3 réplicas mutantes y 4 WT — lo que respeta la estructura experimental del estudio. A diferencia de los métodos célula a célula como FindMarkers, el pseudobulk evita la pseudoreplicación que surge de tratar cada célula como una observación independiente cuando en realidad todas las células de una misma muestra provienen del mismo ratón. Esto es especialmente relevante en este dataset, donde existe una marcada diferencia en el número de células entre condiciones (\~9,781 células mutantes vs \~25,502 WT), lo que podría sesgar los resultados de un análisis célula a célula. Por estas razones, el pseudobulk representa el enfoque estadísticamente más apropiado para responder a la pregunta de qué genes se expresan diferencialmente entre células LSK WT y R396Q/+.
+
+```{r}
+cell_selection <- SetIdent(R396Q3k_annotated, value = "orig.ident")
+table(cell_selection$orig.ident)
+```
+
+```{r}
+# get the count matrix for all cells
+DGE_DATA <- GetAssayData(cell_selection, assay = "RNA", layer = "counts")
+
+# Compute pseudobulk
+mm <- Matrix::sparse.model.matrix(~ 0 + cell_selection$orig.ident)
+pseudobulk <- DGE_DATA %*% mm
+```
+
+```{r}
+
+colnames(pseudobulk) <- c("mutant_1", "mutant_2", "mutant_3", "mutant_4",
+                           "wt_1", "wt_2", "wt_3", "wt_4")
+
+bulk.labels <- factor(c("mutant", "mutant", "mutant", "mutant",
+                         "wt", "wt", "wt", "wt"),
+                      levels = c("wt", "mutant"))  # wt = referencia
+
+dge.list <- DGEList(counts = pseudobulk, group = bulk.labels)
+keep <- filterByExpr(dge.list)
+dge.list <- dge.list[keep, , keep.lib.sizes = FALSE]
+dge.list <- calcNormFactors(dge.list)
+
+design <- model.matrix(~ bulk.labels)
+dge.list <- estimateDisp(dge.list, design)
+
+fit <- glmQLFit(dge.list, design)
+qlf <- glmQLFTest(fit, coef = 2)
+
+topTags(qlf)
+```
+
+El análisis pseudobulk con edgeR identificó genes significativamente diferencialmente expresados entre células LSK WT y R396Q/+. Entre los genes más regulados a la alta en la condición mutante destaca *Ly6c1,* un marcador de superficie de granulocitos y monocitos/macrófagos que Hall et al. (2025) reportan como exclusivamente expresado en células R396Q/+ alrededor del cluster Myeloid Prog, lo que representa una validación independiente del sesgo mieloide observado. Adicionalmente, el gen *Mertk* aparece significativamente regulado a la baja en células mutantes, lo cual es consistente con las alteraciones en poblaciones mieloides descritas en el artículo original, sin embargo, este gen no aparece reportado en dicho artículo.
+
+```{r}
+res.edgeR <- topTags(qlf, 100)$table
+res.edgeR$dir <- ifelse(res.edgeR$logFC > 0, "mutant", "wt")  # <- aquí
+res.edgeR$gene <- rownames(res.edgeR)
+
+top.edgeR <- res.edgeR %>%
+  group_by(dir) %>%
+  top_n(-10, PValue) %>%
+  arrange(dir)
+
+DotPlot(cell_selection,
+    features = as.character(unique(top.edgeR$gene)),
+    group.by = "orig.ident",
+    assay = "RNA"
+) + coord_flip() + ggtitle("EdgeR pseudobulk LSK") + RotatedAxis()
+```
+
+# Discusión
+
+Este proyecto analizó la expresión de células LSK de ratones Gata2R396Q/+ mediante scRNA-seq, con el objetivo de recrear los resultados del artículo **Modeling GATA2 deficiency in mice: the R396Q mutation disrupts normal hematopoiesis**, realizado por Hall et al. (2025), y a su vez, caracterizar los cambios en la composición poblacional celular y los perfiles transcriptómicos asociados a esta mutación.
+
+Los datos fueron procesados con un pipeline estándar que incluyó control de calidad, normalización, integración, clustering y anotación celular. Tras su procesamiento, se identificaron 22 clústeres celulares, lo que concordó con lo reportado en Hall et al. (2025). La visualización con métodos no-lineales, específicamente UMAP, mostró un enriquecimiento de progenitores mieloides en células LSK.
+
+Después de la anotación, el método elegido (uso de SingleR con referencia ImmGen) reveló ciertas limitaciones en la identificación de subpoblaciones de células progenitoras. La masa central del UMAP mostró una mezcla de células B, monocitos y células T, mostrando la dificultad de clasificar poblaciones de células inmaduras con referencias diseñadas para células maduras. Esta limitación fue esperada y por ello, se tomó la cautela necesaria al realizar interpretaciones de resultados.
+
+El análisis de ciclo celular mostró que la mayoría de las células, tanto mutantes como control, se encontraban en fase G1, con scores S y G2M cercanos a cero, lo que es consistente con la quiescencia esperada en progenitores hematopoyéticos. Aunque sí se encontraron secciones donde el ciclo celular tuvo cierto impacto, no se realizaron análisis extra en este proyecto, lo que consideramos como una limitación importante.
+
+La visualización de genes de interés confirmó patrones reportados en el artículo original. El gen *Gata2* mostró una mayor expresión en células mutantes, al igual que el gen *Tgfbr3*, que ha sido asociado con la inhibición de la diferenciación linfoide y eritroide, así como a la estimulación del linaje monocítico, contribuyendo al sesgo mieloide observado (Bataller et al., 2019). Asimismo, el gen *Ly6c1* se observó enriquecido en células mutantes, al igual que *Slamf1*, consistente con el incremento en CD150 reportado en el artículo original como marcador de envejecimiento acelerado.
+
+Finalmente, los hallazgos del análisis de expresión diferencial son consistentes con los resultados descritos por Hall et al., (2025). En particular, la regulación a la alta de *Ly6c1* en nuestros datos concuerda directamente con el artículo, en donde identificaron este marcador de superficie de granulocitos y monocitos/macrófagos como exclusivamente expresado en células LSK *Gata2* R396Q alrededor del clúster de progenitores mieloides.
+
+El incremento en la expresión de *Igfbp5*, miembro de la familia de proteínas moduladoras de señalización IGF (Insulin-growth factor), sugiere alteraciones en las vías de crecimiento dentro de la población LSK mutante, aunque su rol en este estudio requiere mayor caracterización.
+
+En la literatura, las proteínas de unión a IGF han sido ampliamente implicadas en el mantenimiento de células madre hematopoyéticas, en particular, se ha demostrado que *Igfbp2*, de la misma familia, es necesario para la supervivencia y el ciclo celular de las HSC en médula ósea, y que su ausencia resulta en una frecuencia significativamente reducida de células LSK, ST-HSC y LT-HSC (Huynh et al., 2011).
+
+Por otro lado, la reducción de expresión del gen *Mertk* en células LSK mutantes es visible. *Mertk* es un receptor tirosina quinasa de la familia TAM con un rol central en el proceso de fagocitosis de células apoptóticas, donde su actividad ayuda a mantener la homeostasis tisular mediante la eliminación de células muertas y la regulación de la respuesta inflamatoria (Bhatt et al., 2023, biorXiv). En el contexto hematopoyético, la baja expresión de *Mertk* en progenitores LSK sugiere una capacidad disminuida para mantener la homeostasis del nicho medular, lo que podría contribuir al ambiente pro-inflamatorio asociado a la progresión de enfermedades mieloides en pacientes con deficiencia de *GATA2* (Craver et al., 2018, Cancers). Esto se alinea además con la reducción en la respuesta a citocinas reportada por Hall et al. en los clústeres HSC del mismo modelo, apuntando en conjunto hacia un compartimento progenitor en vías de agotamiento.
+
+Asimismo, la disminución en la expresión de *Ank2* es consistente con alteraciones en la organización estructural de la membrana celular. *Ank2* codifica para Ankyrin-B, una proteína andamiaje que conecta canales iónicos, moléculas de adhesión celular y receptores al citoesqueleto basado en espectrina, y que es esencial para el mantenimiento de dominios de membrana especializados en diversos tipos celulares (Cunha & Bhatt, 2022, Frontiers in Pharmacology). Su reducción en células LSK *Gata2* R396Q podría indicar cambios en la organización de la membrana y en la señalización de receptores de superficie, lo que puede afectar la capacidad de los progenitores para responder a las señales del nicho medular.
+
+En conjunto, estos resultados sugieren que la mutación *Gata2* R396Q altera simultáneamente procesos de supervivencia, homeostasis del nicho medular y mantenimiento estructural en la población LSK, acordes con el sesgo mieloide descrito previamente en este modelo (Hall et al., 2025).
+
+Futuros estudios funcionales serán necesarios para determinar el papel específico de estos genes en el contexto de la deficiencia de *Gata2*.
+
+## Referencias
+
+Bataller, A., Montalban-Bravo, G., Soltysiak, K. A., & Garcia-Manero, G. (2019). The role of TGFβ in hematopoiesis and myeloid disorders. *Leukemia, 33*(5), 1076–1089. <https://doi.org/10.1038/s41375-019-0465-5>
+
+Bhatt, D. L., et al. (2023). *MERTK coordinates efferocytosis by regulating integrin localization and activation* \[Preprint\]. bioRxiv. <https://doi.org/10.1101/2023.07.20.549870>
+
+Craver, B. M., El Alaoui, K., Scherber, R. M., & Fleischman, A. G. (2018). The critical role of inflammation in the pathogenesis and progression of myeloid malignancies. *Cancers, 10*(4), 104. <https://doi.org/10.3390/cancers10040104>
+
+Cunha, S. R., & Bhatt, D. L. (2022). Pleiotropic ankyrins: Scaffolds for ion channels and transporters. *Frontiers in Pharmacology, 13*, 1021662. <https://doi.org/10.3389/fphar.2022.1021662>
+
+Hall, T., Mehmood, R., Sá da Bandeira, D., Cotton, A., Klein, J., Pruett-Miller, S. M., Izraeli, S., Clements, W. K., & Crispino, J. D. (2025). Modeling GATA2 deficiency in mice: the R396Q mutation disrupts normal hematopoiesis. *Leukemia, 39*, 734–747. <https://doi.org/10.1038/s41375-024-02508-z>
+
+Huynh, H., Zheng, J., Umikawa, M., Zhang, C., Silvany, R., Iizuka, S., Holzenberger, M., Zhang, W., & Zhang, C. C. (2011). IGF binding protein 2 supports the survival and cycling of hematopoietic stem cells. *Blood, 118*(12), 3236–3243. <https://doi.org/10.1182/blood-2011-01-331199>
