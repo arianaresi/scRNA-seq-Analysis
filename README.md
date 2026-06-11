@@ -54,4 +54,6 @@ El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/aria
 
 Para una mayor comprensión (y una manera divertida de aprender), también adjuntamos una infografía sobre análisis bioinformático de sc-RNA seq. Haz click [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/blob/main/Infografía/Infografía_singlecell.png) para aprender más con Bibble.
 
-Por último, para una visualización más gráfica de todo el pipeline, adjuntamos un diagrama de flujo. ![](images/pipeline_scrna_gata2.png)
+Por último, para una visualización más gráfica de todo el pipeline, adjuntamos un diagrama de flujo. ![Pipeline del análisis transcriptómico de células LSK con mutación R396Q en GATA2 mediante scRNA-seq](images/pipeline_scrna_gata2.png)
+
+Notas: Este pipeline se corrió de manera local, es decir, en los equipos de cómputo de cada una de las integrantes.
