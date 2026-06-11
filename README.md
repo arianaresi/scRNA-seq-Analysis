@@ -26,30 +26,16 @@ De la misma manera, se recomienda encarecidamente leer la información general d
 
 **1. Descarga y normalización de datos**
 
-Las matrices de cuentas sin procesar (códigos de barras, características, matriz) de 8 muestras (4 WT + 4 mutantes R396Q) se descargaron directamente de NCBI GEO. Cada muestra se convierte en un objeto Seurat y, a continuación, se fusiona en un único objeto para su análisis de calidad y normalización en conjunto. 
+Se inicia con las matrices de cuentas sin procesar (códigos de barras, características, matriz) de 8 muestras (4 WT + 4 mutantes R396Q), mismas que se descargaron directamente de NCBI GEO. Cada muestra se convierte en un objeto Seurat y, a continuación, se fusiona en un único objeto para su análisis de calidad y normalización en conjunto. 
 
-El script .qmd y archivo HTML pueden consultarse [aquí]().
+El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/tree/main/Descarga%20y%20normalización).
 
 
-Traducción realizada con la versión gratuita del traductor DeepL.com
+**2. Reducción de dimensionalidad, clustering e integración**
 
-It is a folder containing scripts and explanations of the outputs of each of the steps mentioned below, you can check out it [here](https://github.com/arianaresi/RNA-seq-Project/tree/main/Raw%20data).
+En esta sección se identifican los genes más variables entre células, se reduce la dimensionalidad con PCA y se agrupan las células en clusters. Las poblaciones se visualizan en 2D con UMAP y t-SNE. Finalmente, se usa Harmony para corregir diferencias técnicas entre muestras de distintos ratones sin perder la variación biológica real.
 
-In addition, each of the specific steps during this process can be reviewed by clicking on the desired title:
-
-- [Download](https://github.com/arianaresi/RNA-seq-Project/blob/main/Raw%20data/Download.md)
-- [Fastqc](https://github.com/arianaresi/RNA-seq-Project/blob/main/Raw%20data/FastQC_RawData.md)
-- [Multiqc](https://github.com/arianaresi/RNA-seq-Project/blob/main/Raw%20data/MultiQC_RawData.md)
-
-**2. Trimming**
-
-It is a folder containing scripts and explanations of the outputs of each of the steps mentioned below, you can check out it in the [Trimming directory](https://github.com/arianaresi/RNA-seq-Project/tree/main/Trimming).
-
-In addition, each of the specific steps during the Trimming process can be reviewed by clicking on the desired title:
-
-   - [Results](https://github.com/arianaresi/RNA-seq-Project/blob/main/Trimming/Trimming_code_and_results.md)
-   - [Fastqc](https://github.com/arianaresi/RNA-seq-Project/blob/main/Trimming/FastQC_trimmed.md)
-   - [Multiqc](https://github.com/arianaresi/RNA-seq-Project/blob/main/Trimming/MultiQC_trimmed.md)
+El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/tree/main/Descarga%20y%20normalización).
 
 **3. Alignment**
 
