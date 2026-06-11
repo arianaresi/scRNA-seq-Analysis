@@ -48,4 +48,8 @@ El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/aria
 
 Para comparar la expresión génica entre las condiciones WT y R396Q/+, se utilizó un enfoque de pseudobulk. Las cuentas de todas las células de cada ratón individual se agregan en un único perfil de expresión por muestra. A continuación, se ajustó un modelo GLM con edgeR.
 
-El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/tree/main/Análisis%20de%20expresión). Además, en estos archivos también se puede acceder a la disución y referencias del proyecto.
+El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/tree/main/Análisis%20de%20expresión). Además, en estos archivos también se puede acceder a la discusión y referencias del proyecto.
+
+### Extras
+
+Para una mayor comprensión (y una manera divertida de aprender), también adjuntamos una infografía sobre análisis bioinformático de sc-RNA seq. Haz click [aquí]() para aprender más con Bibble.
