@@ -1,7 +1,9 @@
 ---
-title: "Información General"
-author: "Victoria Lelis, Renata Sandoval y Ariana Silva"
-format: html
+title: "Información general"
+author: "Victoria Lelis, Renata Sandoval & Ariana Silva"
+format:
+  html:
+    embed-resources: true
 editor: visual
 ---
 
