@@ -1,6 +1,9 @@
 ---
-title: "parte 4"
-format: html
+title: "Análisis de expresión diferencial"
+author: "Victoria Lelis, Renata Sandoval & Ariana Silva"
+format:
+  html:
+    embed-resources: true
 editor: visual
 ---
 
