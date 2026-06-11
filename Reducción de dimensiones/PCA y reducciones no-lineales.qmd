@@ -1,0 +1,231 @@
+---
+title: "PCA y reducciones no-lineales"
+author: "Victoria Lelis, Renata Sandoval y Ariana Silva"
+format: html
+editor: visual
+---
+
+# PCA y reducciones no-lineales
+
+### Cargar el dataset de R396Q3
+
+Tal cual se describió en los datos anteriormente, este dataset creado contiene 32,285 genes en 35,283 células. El archivo .rds consta de dos capas para 8 muestras: la matriz de cuentas crudas (counts) y los datos normalizados (data).
+
+```{r}
+library(Matrix) # install.packages("Matrix")
+library(hdf5r)  # install.packages("hdf5r")
+library(rhdf5)  # BiocManager::install("rhdf5")
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+library(DoubletFinder) # remotes::install_github('chris-mcginnis-ucsf/DoubletFinder', force = TRUE)
+library(Seurat) ## paquete principal de este capítulo
+```
+
+```{r}
+# Cargar el objeto desde el archivo RDS
+R396Q <- readRDS("output/ScRNAseq_R396Q.rds")
+
+# Verificar qué contiene
+R396Q
+```
+
+## Relación entre media y varianza de las muestras
+
+Este plot muestra cuáles son los genes más relevantes para nuestro análisis. El eje X muestra la expresión promedio de cada gen (cada punto); mientras que el eje Y representa la varianza. Este último eje muestra cuánto cambia la expresión cada gen entre las diferentes células del cluster. Los puntos negros son genes que tienen una varianza muy baja, cercana a cero; esto significa que, en todas las células, su expresión es muy parecida. Y hay 30,285 genes dentro de este caso.
+
+Por otro lado, los puntos rojos son aquellos genes en donde su expresión es más variable a lo largo de las células del estudio. Hay 2,000 genes altamente variables, por ejemplo *NGP, LCN2, CAMP*, entre otros; los cuales son marcadores del linaje mieloide.
+
+```{r, warning=FALSE, message=FALSE}
+R396Q <- FindVariableFeatures(R396Q, selection.method = "vst", 
+                             nfeatures = 2000, verbose = F )
+
+# Obtener los 10 genes más variables
+top10 <- head(VariableFeatures(R396Q), 10)
+# Colocar la etiqueta de los genes
+plot1 <- VariableFeaturePlot(R396Q)
+# Colocar la etiqueta de los genes
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+# Combinar gráficos lado a lado y poner la leyenda arriba
+combined_plot <- plot1 + plot2 + plot_layout(guides = "collect") & theme(legend.position = "top")
+combined_plot
+```
+
+## Escalado de los datos y reducción de dimensiones incial (PCA)
+
+```{r}
+R396Q <- ScaleData(R396Q, features = VariableFeatures(R396Q))
+R396Q_pca <- RunPCA(R396Q, verbose = F, npcs = 20)
+```
+
+Verificar los nuevos campos agregados
+
+```{r}
+Reductions(R396Q_pca)
+```
+
+### Visualización del PCA
+
+De los 2,000 genes variables que fueron identificados en el paso anterior se colocaron en dos componentes principales. Esto permite ver cómo se distribuyen los datos y los grupos de control y tratamiento. Puede observarse que las muestras del grupo control se ven bastante homogéneas, esto es indicador de que no hubo errores técnicos considerables que haga que una de estas muestras sea completamente diferente al resto. Hasta este momento solo se muestra la dispersión, aun no se observa ningún cluster de tipos celulares.
+
+```{r}
+DimPlot(R396Q_pca, reduction = "pca") + ggtitle("PCA con genes variables")
+```
+
+### Exploración inicial con `ElbowPlot()`
+
+Este plot muestra la contribución de las primeras 20 componentes principales, da información de cuántas de estas PC aportan datos útiles antes de saturarse. En el caso de este gráfico no es tan claro el '*elbow*', por lo que en este tipos de análisis se suelen ocupar las primeras 20 PCs.
+
+```{r}
+ElbowPlot(R396Q_pca)
+```
+
+### ¿Qué PCs son estadísticamente significativos?
+
+El JackStraw Plot compara la distribución empírica (eje X) contra la teórica (eje Y) de los p-valores de cada componente principal para determinar cuáles son estadísticamente significativos. Los PC 1 a 18 presentan un p-valor de 0, lo que es extremadamente significativo. Las PCs presentes son altamente significativas, por ello, colapsan cerca del 0.
+
+```{r, warning=FALSE}
+R396Q_jack <- JackStraw(R396Q_pca, num.replicate = 100)
+# Asignar puntuaciones de significancia a las PCs
+R396Q_jack <- ScoreJackStraw(R396Q_jack, dims = 1:20)
+# Visualizar las PCs significativas
+JackStrawPlot(R396Q_jack, dims = 1:20)
+```
+
+### Genes que impulsan PC1- PC15
+
+En este apartado se seleccionaron las 18 PCs con p-valor de 0 descritas anteriormente. En los tipos de gráficos de esta sección, el eje Y se muestra los genes, mientras que el eje X son los *loadings* de cada gen. Valores positivos indican una correlación positiva con esa PC, los números negativos indican correlación negativa y valores cercanos a cero no aportan información al PC.
+
+```{r}
+VizDimLoadings(R396Q_pca, dims = 1:18, reduction = "pca")
+```
+
+### ¿Qué genes y células están impulsando cada PC?
+
+En este gráfico se plotean los *loadings* de cada gen. En esta escala de color un amarillo significa expresión alta, conforme se va opacando este color hasta llegar a negro o morado oscuro significa expresión nula. Mientras que un rosa brillante indica expresión baja. En el eje Y (filas) están acomodados los genes. En el primer bloque, del gen *Wfdc21* a *Cd177* son aquellos que tienen *loadings* positivos en el componente principal 1. Mientras que desde el gen *Trpc6* al final, *Nrxn1*, son los genes que tuvieron *loadings* negativos.
+
+El gráfico está dividido en cuatro partes, en la mitad izquierda del *heatmap* se tiene el bloque superior de genes apagado (color morado) y el bloque inferior son los genes que están encendidos (secciones de amarillo). En el lado derecho superior, son los genes que están completamente encendidos y la parte inferior son aquellos que están apagados (rosita).
+
+```{r}
+DimHeatmap(R396Q_pca, dims = 1, cells = 500, balanced = TRUE)
+```
+
+Y aquí se observa el mismo *heatmap* para 18 componentes principales.
+
+```{r}
+DimHeatmap(R396Q_pca, dims = 1:18, cells = 500, balanced = TRUE)
+```
+
+## Clustering de células
+
+-   El algoritmo de clustering en Seurat (basado en *Louvain* o *Leiden*) detecta comunidades en el grafo de vecinos.
+
+-   El parámetro `resolution` ajusta la sensibilidad:
+
+    -   **Valores bajos (ej. 0.2–0.5):** producen menos clusters, más grandes y generales.
+    -   **Valores altos (ej. 1–2):** producen más clusters, más pequeños y específicos.
+
+```{r}
+R396Q_pca <- FindNeighbors(R396Q_pca, dims = 1:18)
+R396Q_pca <- FindClusters(R396Q_pca, resolution = 0.5, cluster.name = "unintegrated_clusters")
+```
+
+## Reducciones no lineales (UMAP/t-SNE)
+
+Este panel de gráficos compara la reducción lineal del PCA del lado izquierdo, descrita previamente. En el centro del panel se encuentra la reducción no lineal t-SNE, en donde cada punto de la gráfica representa una célula. En diferentes colores pueden observarse las poblaciones celulares de las muestras. Los clústers más grandes se encuentran al centro, de color naranja y rosa. Los clústers que aparecen en los extremos, tal como el azul claro y el café oscuro, representan poblaciones minoritarias bien diferenciadas.
+
+Por otro lado, el UMAP, del lado derecho, igualmente es una visualización de una reducción no-lineal. Se preserva tanto la estructura local, así como la estructura global. Pueden observarse distintas poblaciones celulares a lo largo del gráfico. La estructura poblacional continua en color verde sugiere una trayectoria de maduración (probablemente linaje mieloide). Los clusters aislados representan poblaciones diferenciadas con perfiles de expresión propios.
+
+```{r}
+# PCA
+R396Q_pca <- RunUMAP(R396Q_pca, dims = 1:18, verbose = F)
+# t-SNE
+R396Q_tsne <- RunTSNE(R396Q_pca, dims = 1:18, verbose = F)
+# UMAP
+R396Q_umap <- RunUMAP(R396Q_pca, dims = 1:18, verbose = F)
+wrap_plots(
+    DimPlot(R396Q_pca, reduction = "pca"),
+    DimPlot(R396Q_tsne, reduction = "tsne"),
+    DimPlot(R396Q_umap, reduction = "umap"),
+    ncol = 3
+) + plot_layout(guides = "collect")
+```
+
+En estas gráficas, se visualiza a las células coloréandose dependiendo de distintas variables. En la gráfica de la derecha, se observa a las células según su condición experimental, es decir, si son células control o células mutadas con la variante R396Q. Puede observsarse un dominio de las células mutadas en el UMAP, comparado con la menor representación de células control.
+
+Del lado izquierdo, se colorean las células de acuerdo al clúster asignado, especificando la identidad de la población celular en cuestión. Los clusters centrales se encuentran dominados por las células control, mientras que el clúster verde alargado inferior está compuesto en su mayoría por células mutadas.
+
+Podría inferirse que la mutación R396Q en el gen *Gata2* conduce a la alteración de la hematopoyesis, caracterizada por la expansión de progenitores mieloides.
+
+```{r}
+# visualizacion grafica
+DimPlot(R396Q_umap, reduction = "umap", group.by =  c("type", "ident"))
+```
+
+## Integración de datasets
+
+```{r}
+# install.packages("harmony")
+suppressMessages(library(harmony))
+
+# Integración con Harmony
+R396Q_integrated <- IntegrateLayers(
+  object = R396Q_pca,
+  method = HarmonyIntegration,   # método de integración
+  orig.reduction = "pca",        # reducción original
+  new.reduction = "harmony",     # nombre de la nueva reducción
+  verbose = FALSE
+)
+```
+
+A continuación, se utiliza la matriz de datos integrada, y se visualizan los resultados con UMAP y t-SNE.
+
+Tras la integración, se corrige el batch effect, y se visualizan las gráficas con las células del mismo tipo agrupándose sin tomar en cuenta de qué muestra provienen.
+
+En el primer gráfico del lado de la izquierda, se observa el origen de las células, es decir, de qué muestra provienen. Puede verse que todas las muestras están mezcladas en el mismo espacio, así que se puede determinar que los datos se integraron correctamente.
+
+En el gráfico central se observan patrones distintos: en la región central grande se encuentran las poblaciones celulares compartidas entre muestras control y muestras de células mutantes, mientras que los clústers de la izquierda se conforman mayoritariamente por células mutantes.
+
+Por último, en el panel de la derecha, se observan los diferentes clúster asignados por Seurat. Así, puede observarse una correpondencia entre poblaciones celulares y muestras. Por ejemplo, el clúster color lila (número 15), puede ser una población que se encuentra expandida por la mutación R396Q en *Gata2*, mientras que los clúster verdes (números 5 al 9), existe un predominio de células mutantes, lo que sugiere un linaje mieloide expandido por la mutación.
+
+```{r}
+# Usar la reducción integrada para clustering y UMAP
+R396Q_integrated <- FindNeighbors(R396Q_integrated, reduction = "harmony", dims = 1:18)
+R396Q_integrated <- FindClusters(R396Q_integrated, resolution = 0.5)
+# t-sne
+R396Q_integrated_tsne <- RunTSNE(R396Q_integrated, reduction = "harmony", dims = 1:18)
+# umap
+R396Q_integrated_umap <- RunUMAP(R396Q_integrated, reduction = "harmony", dims = 1:18, verbose = F)
+
+# type es igual a condition
+# visualizacion grafica
+DimPlot(R396Q_integrated, reduction = "umap", group.by =  c("orig.ident", "type", "seurat_clusters"))
+```
+
+En este panel se compara la visualización de poblaciones celulares con los tres reducción de dimensionalidad: PCA, t-SNE y UMAP.
+
+Para ello, en la primera fila del panel se muestran los datos sin integración, es decir, sin la normalización del batch efefct. Aquí, hay un dominio casi total de las muestras mutant_31 y mutant_32, lo que podría deberse a un número mayor de células secuenciadas en comparación a las réplicas wild-type.
+
+Respecto a la segunda fila del panel, con los datos integrados, la estructura es casi idéntica. Esperaríamos ver una mezcla más homogénea de colores tras la integración, aunque eso puede deberse al número de células de las muestras de células mutantes.
+
+```{r}
+wrap_plots(
+  # Raw data
+  DimPlot(R396Q_pca, reduction = "pca", group.by = "orig.ident")+NoAxes()+ggtitle("PCA raw data"),
+  DimPlot(R396Q_tsne, reduction = "tsne", group.by = "orig.ident")+NoAxes()+ggtitle("tSNE raw data"),
+  DimPlot(R396Q_umap, reduction = "umap", group.by = "orig.ident")+NoAxes()+ggtitle("UMAP raw data"),
+  # Datos integrados despues de Harmony
+  DimPlot(R396Q_integrated, reduction = "pca", group.by = "orig.ident")+NoAxes()+ggtitle("PCA integrated"),
+  DimPlot(R396Q_integrated_tsne, reduction = "tsne", group.by = "orig.ident")+NoAxes()+ggtitle("tSNE integrated"),
+  DimPlot(R396Q_integrated_umap, reduction = "umap", group.by = "orig.ident")+NoAxes()+ggtitle("UMAP integrated"),
+  ncol = 3
+) + plot_layout(guides = "collect")
+```
+
+## Guardar dataset
+
+```{r}
+saveRDS(R396Q_integrated_umap, file = "output/R396Q3_integrated.rds")
+```
+
+# 
