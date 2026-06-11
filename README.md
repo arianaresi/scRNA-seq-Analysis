@@ -35,28 +35,18 @@ El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/aria
 
 En esta sección se identifican los genes más variables entre células, se reduce la dimensionalidad con PCA y se agrupan las células en clusters. Las poblaciones se visualizan en 2D con UMAP y t-SNE. Finalmente, se usa Harmony para corregir diferencias técnicas entre muestras de distintos ratones sin perder la variación biológica real.
 
-El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/tree/main/Descarga%20y%20normalización).
+El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/tree/main/Reducción%20de%20dimensiones).
 
-**3. Alignment**
+**3. Anotación de tipos celulares**
 
-It is a folder containing scripts and explanations of the outputs of each of the steps mentioned below, you can check out it in the [Alignment](https://github.com/arianaresi/RNA-seq-Project/tree/main/Alignment) directory.
+En primer lugar, se realizó la identificación de genes marcadores en cada clúster en comparación con todos los demás (prueba de Wilcoxon). Los resultados se visualizan mediante mapas de calor, diagramas de puntos y diagramas de violín. Después, se pudo implementar la anotación automatizada con SingleR: cada célula se etiqueta automáticamente compara su perfil de expresión con la referencia MouseRNAseqData. Los genes de especial interés se visualizaron en UMAP.
 
-   - [Definition and workflow](https://github.com/arianaresi/RNA-seq-Project/blob/main/Alignment/Definition%20and%20workflow.md)
-   - [STAR index](https://github.com/arianaresi/RNA-seq-Project/blob/main/Alignment/STAR_index.md)
-   - [STAR alignment](https://github.com/arianaresi/RNA-seq-Project/blob/main/Alignment/STAR_alignment.md)
+El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/tree/main/Reducción%20de%20dimensiones).
   
-**4. R analysis**
+**4. Análisis de expresión diferencial**
 
-The complete code diretory can be found [here](https://github.com/arianaresi/RNA-seq-Project/tree/main/R%20analysis).
+Para comparar la expresión génica entre las condiciones WT y R396Q/+, se utilizó un enfoque de pseudobulk. Las cuentas de todas las células de cada ratón individual se agregan en un único perfil de expresión por muestra. A continuación, se ajustó un modelo GLM con edgeR.
 
-A single code was made for import data into R, Normalization and Batch effect correction / DGE analysis you can check out it [here](https://github.com/arianaresi/RNA-seq-Project/blob/main/R%20analysis/script_complet.txt). 
+El script .qmd y archivo HTML pueden consultarse [aquí](https://github.com/arianaresi/scRNA-seq-Analysis/tree/main/Reducción%20de%20dimensiones).
 
-   - [Import STAR data to R](https://github.com/arianaresi/RNA-seq-Project/blob/main/R%20analysis/Import%20data/Import_data_R.md)
-   - [Normalization](https://github.com/arianaresi/RNA-seq-Project/blob/main/R%20analysis/Normalization.md)
-   - [Batch effect correction](https://github.com/arianaresi/RNA-seq-Project/blob/main/R%20analysis/Batch_effect_correction.md)
-   - [DGE Analysis (DESeq2)](https://github.com/arianaresi/RNA-seq-Project/blob/main/R%20analysis/DGE_analysis.md)
-  
-**5. Analysis of Functional Terms (GOterms)**
-
-It is a folder containing scripts and explanations of the outputs of each of the steps mentioned below, you can check out it in the [GOterms](https://github.com/arianaresi/RNA-seq-Project/tree/main/Analysis%20of%20Functional%20Terms) directory.
-- [GOt
+**Para leer la discusión y acceder a las referencias, haga click [aquí]().
