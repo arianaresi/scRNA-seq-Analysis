@@ -1,0 +1,319 @@
+---
+title: "parte_3"
+format: html
+editor: visual
+---
+
+# Anotación de tipos celulares
+
+### Cargar paquetes
+
+```{r}
+library(tidyverse)
+library(patchwork)
+library(Seurat)
+library(SingleCellExperiment)
+library(SingleR)
+library(celldex)
+library(DT)
+library(dplyr)
+library(tibble)
+
+
+```
+
+### Cargar el dataset de R396Q3k
+
+Se identificaron 22 clusters celulares. Cada cluster agrupa células con perfiles de expresión génica similares, lo que permitirá asociarlos posteriormente con tipos celulares específicos.
+
+```{r}
+# Cargar el objeto desde el archivo RDS
+R396Q3k_integrated <- readRDS("output/R396Q3_integrated.rds")
+
+# Unir las capas del assay activo (ej. RNA)
+R396Q3k_integrated <- JoinLayers(R396Q3k_integrated)
+
+# Set the identity as louvain with resolution 0.5
+sel.clust <- "RNA_snn_res.0.5"
+# La identidad activa (active.ident) es la variable que Seurat usa por defecto para agrupar células en funciones como FindMarkers, DimPlot, etc.
+alldata <- SetIdent(R396Q3k_integrated, value = sel.clust)
+
+# Número de células en cada cluster 
+table(alldata@active.ident)
+```
+
+Al observar el número de células por muestra, se puede apreciar que las réplicas de una misma condición (control o mutante) presentan cantidades similares entre sí, mientras que existe una diferencia notable entre condiciones.
+
+```{r}
+head(alldata@meta.data) ##solo queriamos ver como se veia el objeto seurat hasta este momento
+table(alldata$orig.ident)
+```
+
+## Identificación de genes marcadores
+
+Al correr `FindAllMarkers` **para cada cluster en el objeto**, devolvió una tabla con los genes marcadores de todos los clusters. Es decir, genes que se expresan más en ese cluster a diferencia de los demás.
+
+```{r}
+# Función: Identifica genes diferencialmente expresados entre dos grupos de células (ej. cluster 0 vs cluster 1, o cluster 0 vs todos los demás).
+markers_genes <- FindAllMarkers(
+    alldata,
+    log2FC.threshold = 0.2, #  umbral de cambio de expresión (default 0.25).
+    test.use = "wilcox", # método estadístico (ej. "wilcox", "MAST", "DESeq2").
+    min.pct = 0.1, # porcentaje mínimo de células que deben expresar el gen.
+    # Exige que la diferencia en la proporción de células que expresan un gen entre el grupo de interés y el grupo de referencia sea al menos del 20%.
+    min.diff.pct = 0.2,
+    only.pos = TRUE, # si TRUE, devuelve solo genes sobreexpresados.
+    max.cells.per.ident = 50, # Limita el número máximo de células usadas por cluster (ident) en el test de DE.
+    assay = "RNA"
+)
+
+markers_genes  %>%
+  # Agrupa la tabla de genes marcadores por el cluster al que pertenecen.
+    group_by(cluster) %>%
+  #  log2 fold change promedio sea mayor que 1.
+    dplyr::filter(avg_log2FC > 1) %>%
+  # Convertir en tabla
+  DT::datatable()
+```
+
+Revisando el número de células en cada cluster se verificó que a excepción de los útimos dos clústers, todas podrían considerarse clusters grandes por lo que se conservara la prueba wilcoxon.
+
+::: callout-important
+La prueba Wilcoxon se eligió tomando en cuenta lo siguiente y con la función `FindMarkers`:
+
+-   Clústeres grandes (0–3, \>300 células): **Wilcoxon**.
+-   Clústeres medianos (4–7, 100–200 células): **MAST** o **Wilcoxon**.
+-   Clúster pequeño (8, 23 células): **MAST** o **ROC**, con interpretación cautelosa.
+
+Para clústeres grandes (0–3) los resultados serán confiables con Wilcoxon; para clústeres medianos (4–7) puedes considerar **MAST**; y para el clúster 8, los resultados deben verse más como hipótesis que como evidencia sólida.
+:::
+
+## Genes marcadores
+
+Se seleccionaron los 25 genes más sobreexpresados para representarlos gráficamente.
+
+```{r}
+top25 <- markers_genes %>%
+    group_by(cluster) %>%
+    top_n(-25, p_val_adj) 
+
+# Divide la ventana gráfica en una cuadrícula de 2 filas × 5 columnas, para mostrar hasta 10 gráficos en la misma figura.
+par(mfrow = c(2, 5), mar = c(4, 6, 3, 1))
+# for para los clusters
+for (i in unique(top25$cluster)) {
+    barplot(sort(setNames(top25$avg_log2FC, top25$gene)[top25$cluster == i], F),
+        horiz = T, las = 1, main = paste0(i, " vs. rest"), border = "white", yaxs = "i"
+    )
+    abline(v = c(0, 0.25), lty = c(1, 2))
+}
+```
+
+### Heatmap
+
+En el heatmap se puede observar que cada uno de los 22 clusters presenta un perfil de expresión génica característico. Entre todos los clústers, el clúster 2 parece mostrar el perfil de expresión más diferenciado. Por otro lado, algunos grupos presentan patrones relativamente similares, como los clusters 0 y 1, así como los clusters 3 y 4; sin embargo, las diferencias entre ellos son suficientes para que hayan sido identificados como clusters independientes.
+
+Un aspecto relevante es que, al igual que en el artículo del cual se obtuvieron los datos, el análisis realizado permitió identificar un total de 22 clusters, lo que indica una alta concordancia con los resultados reportados previamente.
+
+```{r}
+top5 <- markers_genes %>%
+    group_by(cluster) %>%
+  # Selecciona las 5 filas con el valor más pequeño de p_val_adj dentro de cada grupo.
+    slice_min(p_val_adj, n = 5, with_ties = FALSE) 
+
+# crear una ranura «scale.data» para los genes seleccionados
+alldata_top5 <- ScaleData(alldata, features = as.character(unique(top5$gene)), assay = "RNA")
+
+# save
+# saveRDS(alldata_top5, file = "output/alldata_top5.rds")
+# saveRDS(top5, file = "output/top5.rds")
+##Viendo los nombres de los genes marcadores top 5
+top5
+
+# Visualizacion grafica
+DoHeatmap(alldata_top5, features = as.character(unique(top5$gene)), group.by = sel.clust, assay = "RNA")
+```
+
+### Dotplot
+
+Al igual que el heatmap, el dotplot permite visualizar los patrones de expresión de los genes marcadores en los distintos clusters, por lo que aporta información consistente con la discutida previamente. En general, se observan los mismos perfiles de expresión característicos de cada cluster y las similitudes entre algunos grupos celulares.
+
+```{r}
+DotPlot(alldata_top5, features = rev(as.character(unique(top5$gene))), group.by = sel.clust, assay = "RNA") + coord_flip()
+```
+
+### Violin plot
+
+También puede trazarse un gráfico de violín para cada gen.
+
+```{r}
+top3 <- markers_genes %>%
+    group_by(cluster) %>%
+    slice_min(order_by = p_val_adj, n = 3, with_ties = FALSE)
+# saveRDS(top3, file = "output/top3.rds")
+
+# Establece pt.size en cero si no quieres que todos los puntos oculten las formas del violín, o en un valor pequeño, como 0,1
+VlnPlot(alldata_top5, features = as.character(unique(top3$gene)), ncol = 5, group.by = sel.clust, assay = "RNA", pt.size = 0)
+```
+
+Se visualizan genes característicos de la Deficiencia de *Gata2*, se considera relevante en determinar qué ocurre con las células y el nivel de expresión de *Gata2* en los diferentes clusters. Asimismo, se considera relevante analizar el gen *Slamf1*, ya que las células portadoras de esta mutación presentaban niveles de expresión elevados de dicho gen, de acuerdo con la literatura y los datos presentados.
+
+```{r}
+VlnPlot(alldata_top5, features = c("Gata2", "Tgfbr3"))
+```
+
+**Violin plots por condición:**
+
+Se puede observar una clara diferencia en el nivel de expresión de estos genes entre algunos clusters según la condición analizada. Sin embargo, en ambos casos las células mutantes presentan una mayor expresión del gen en comparación con las células control.
+
+```{r}
+VlnPlot(alldata_top5, 
+        features = c("Gata2", "Tgfbr3"), 
+        split.by = "type",
+        cols = c("ctrl" = "steelblue", "mutant" = "tomato"),
+        pt.size = 0)
+```
+
+### **Gradientes** en UMAP
+
+Cada gen se proyecta como un mapa de calor sobre las coordenadas del UMAP, mostrando en qué regiones (clusters) se expresa más o menos.
+
+Estos son genes de interés que son importantes en el contexto de las células hematopoyécticas de acuerdo al artículo:
+
+-   ***Gata2***: factor de transcripción esencial para HSC; sobreexpresado en varios clústers de progenitores Gata2 R396Q/+
+
+-   ***Tgfbr3***: correceptor de TGFβ; altamente sobreexpresado en progenitores mutantes, asociado al sesgo mieloide
+
+-   ***Ly6c1***: marcador de poblaciones granulocíticas/monocíticas; expresado exclusivamente en progenitores Gata2R396Q/+
+
+-   ***Slamf1*** (CD150): marcador de LT-HSC; aumentado en mutantes, asociado a envejecimiento acelerado de HSC
+
+```{r}
+FeaturePlot(alldata_top5, 
+            features = c("Gata2", "Tgfbr3", "Ly6c1", "Slamf1"),
+            ncol = 2)
+```
+
+## **Asignar identidad celular a los clusters (**`SingleR` **+** `celldex`**)**
+
+```{r}
+#Liberacion de memoria
+rm(list = setdiff(ls(), "R396Q3k_integrated"))
+```
+
+En este dataset, cada cluster se puede asociar fácilmente a un tipo celular porque los genes diferenciales coinciden con marcadores bien establecidos.
+
+```{r, warning=FALSE, message=FALSE}
+# convertir de objeto seurat a SingleCellExperiment
+sce <- as.SingleCellExperiment(R396Q3k_integrated)
+sce
+# saveRDS(sce, file = "output/sce.rds")
+```
+
+Se utilizará un paquete llamado `SingleR` para etiquetar cada célula. `SingleR` utiliza un conjunto de datos de referencia de tipos celulares con datos de expresión para deducir la mejor etiqueta para cada célula. El paquete `celldex` contiene una práctica recopilación de referencias de tipos celulares que, actualmente, incluye los siguientes conjuntos:
+
+```{r}
+library(celldex)
+ls('package:celldex')
+```
+
+En este proyecto, se usará el conjunto de datos de ratón.
+
+```{r}
+# descargar referencia de ratoncito
+ref.set <- celldex::MouseRNAseqData()
+```
+
+Observación de etiquetas (labels)
+
+```{r}
+unique(ref.set$label.main)
+```
+
+Un ejemplo de los tipos de etiquetas «finas».
+
+```{r}
+head(unique(ref.set$label.fine))
+```
+
+Ahora, se etiquetarán las células utilizando el objeto \`SingleCellExperiment\`, con la referencia establecida anteriormente.
+
+```{r}
+pred.cnts <- SingleR::SingleR(test = sce, ref = ref.set, labels = ref.set$label.main)
+```
+
+Se conservan los tipos que tengan más de 10 celdas en la etiqueta, se vuelve a asignar esas etiquetas al objeto Seurat y se visualizan en umap.
+
+```{r}
+lbls.keep <- table(pred.cnts$labels)>10
+R396Q3k_integrated$SingleR.labels <- ifelse(lbls.keep[pred.cnts$labels], pred.cnts$labels, 'Other')
+# Crear R396Q3k_annotated para que el Paso 5 funcione
+R396Q3k_annotated <- R396Q3k_integrated  # <- AGREGAR ESTA LÍNEA
+DimPlot(R396Q3k_integrated, reduction='umap', group.by='SingleR.labels')
+```
+
+Es bueno ver que, aunque SingleR no utiliza los clústeres calculados anteriormente, las etiquetas parecen coincidir bastante bien con esos clústeres.
+
+Los tipos celulares asignados por SingleR son coherentes con el contexto biológico del análisis, ya que las células hematopoyéticas se diferencian en dos grandes linajes: linfoide (células T, B y NK) y mieloide (monocitos, macrófagos y granulocitos). Sin embargo, también se identificaron algunos tipos celulares menos esperados, como microglia y células endoteliales, lo que probablemente podría ser una anotación incorrecta debido a la similitud en el perfil de expresión génica con otros tipos de poblaciones celulares.
+
+Al observar los gradientes de expresión en el UMAP, se puede identificar la sobreexpresión de estos genes en subpoblaciones celulares específicas. En especial ***Gata2*** y ***Tgfbr3*****,** cuya expresión elevada parece concentrarse en las mismas regiones del UMAP.
+
+## Marcadores conservados de tipos celulares
+
+Para identificar **marcadores conservados de tipos celulares** en Seurat, se usa la función `FindConservedMarkers()`. Esta función busca genes que estén diferencialmente expresados en un cluster específico **y que además sean consistentes entre condiciones o grupos**. Aquí se analizarán los marcadores conservados del clúster cero para ejemplificación. La elección de este clúster es por su tamaño, siendo el más grande de todos, con más de 6 mil células.
+
+```{r}
+# Buscar marcadores conservados en el cluster 0
+conserved_markers <- FindConservedMarkers(
+  R396Q3k_annotated,
+  ident.1 = 0,              # cluster de interés
+  grouping.var = "type",  # variable que define los grupos (ej. donantes)
+  assay = "RNA"
+)
+
+head(conserved_markers)
+```
+
+### Seleccionar los más relevantes
+
+-   Para encontrar **marcadores conservados**, lo más lógico es ordenar por `max_pval`:
+    -   Si el máximo p‑valor sigue siendo bajo, significa que el gen es significativo en todos los grupos.
+-   `minimump_p_val` solo te dice el mejor grupo, pero no garantiza conservación.
+
+Los marcadores conservados sugieren que el clúster 0 corresponde a progenitores hematopoyéticos tempranos, con la expresión de marcadores celulares como *Cd34+*, *Flt3+* y *Msi2+*, lo que nos indica que la identidad celular se mantiene a pesar de la mutación R396Q.
+
+```{r}
+top_conserved <- conserved_markers %>%
+  rownames_to_column("gene") %>%
+  arrange(max_pval) %>% # ordenar de menor a mayor
+  slice_head(n = 20) # tomar los 10 más robustos
+
+head(top_conserved)
+```
+
+### Visualización
+
+```{r}
+DotPlot(R396Q3k_annotated, features = top_conserved$gene, cols = c("blue", "red"), dot.scale = 8, split.by = "type") +
+    RotatedAxis()
+```
+
+### Interpretación 🔎
+
+-   Si un gen aparece con puntos grandes y coloreados en ambos grupos (R396Q y control), significa que es un **marcador conservado**, es decir, se expresa de manera robusta en ese cluster sin importar la condición.
+
+-   Si el color o el tamaño cambia mucho entre células R396Q y control, ese gen podría ser un **marcador diferencial** entre condiciones.
+
+En este caso, se observan genes que podrían interpretarse como marcadores conservados, ya que mantienen niveles de expresión similares en ambos grupos, sin que la condición experimental parezca afectar significativamente su expresión. Una posible excepción es ***Gng11***, cuyo nivel de expresión muestra una ligera variación entre condiciones.
+
+## Guardar dataset y liberación de memoria
+
+```{r, eval=FALSE}
+saveRDS(R396Q3k_annotated, file = "output/R396Q3_annotated.rds")
+cat("\n--- Liberando memoria ---\n")
+
+rm(list = ls())
+
+gc()
+```
+
+# 
